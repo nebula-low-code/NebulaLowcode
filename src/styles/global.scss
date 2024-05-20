@@ -1,0 +1,66 @@
+/* input 输入框label */
+.custom_component_label{
+  min-height:32px;
+  line-height: 32px;
+  label{
+    display: inline-block;
+    word-wrap: break-word;
+    flex-shrink: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #606266;
+    padding: 0 12px 0 0;
+  }
+  label.required:before {
+    content: '* ';
+    color: red;
+  }
+}
+
+.i-scrollbar-hide {
+  &::-webkit-scrollbar {
+    width: 0;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #e8eaec;
+  }
+}
+
+// 隐藏移动端label标签
+.hide_label{
+  .van-field__label{
+    display: none;
+  }
+}
+
+.ant-message::before {
+  display: none;
+}
+
+.ant-qrcode::before {
+  display: none;
+}
+
+.ant-form-item {
+  margin-bottom: 12px;
+}
+
+.ant-collapse>.ant-collapse-item >.ant-collapse-header {
+  align-items: center;
+}
+
+.ant-tree {
+  background: transparent;
+}
+
+.van-cell {
+  background: transparent !important;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+}

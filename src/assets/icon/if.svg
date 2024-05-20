@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="480px" height="480px" viewBox="0 0 480 480" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>条件</title>
+    <g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="条件" transform="translate(5.000000, 5.000000)">
+            <rect id="BORDER" stroke="#666666" stroke-width="10" x="0" y="0" width="470" height="470" rx="60"></rect>
+            <path d="M235,88.9907479 L454.013878,235 L235,381.009252 L15.9861218,235 L235,88.9907479 Z" id="多边形" stroke="#666666" stroke-width="10" stroke-linejoin="round"></path>
+            <text id="？" font-family="PingFangSC-Semibold, PingFang SC" font-size="200" font-weight="500" fill="#666666">
+                <tspan x="186" y="307">？</tspan>
+            </text>
+        </g>
+    </g>
+</svg>
