@@ -38,8 +38,24 @@
         </template>
         <span style="vertical-align: middle">导出HTML</span>
       </a-button>
-      
-
+      <a-button type="text" @click="onHomePage">
+        <template #icon>
+          <i class="iconfont iconhomepage" style="margin-right: 2px; vertical-align: middle"></i>
+        </template>
+        <span style="vertical-align: middle">官网</span>
+      </a-button>
+      <a-button type="text" @click="onGitee">
+        <template #icon>
+          <i class="iconfont icongitee" style="margin-right: 2px; vertical-align: middle"></i>
+        </template>
+        <span style="vertical-align: middle">gitee</span>
+      </a-button>
+      <a-button type="text" @click="onGithub">
+        <template #icon>
+          <i class="iconfont icongithub" style="margin-right: 2px; vertical-align: middle"></i>
+        </template>
+        <span style="vertical-align: middle">github</span>
+      </a-button>
     </div>
     <div class="header-right">
       <div style="display: inline-block; cursor: pointer" :style="{ color: store.isShowRightMenu ? '' : '#409eff' }" @click="onToggleRightMenu">
@@ -97,10 +113,9 @@ function onLoadHistory(configJson: string) {
 }
 
 function onPcPreview() {
-  
-  const base_url = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ":" + window.location.port : "");
+  const base_url = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '')
 
-  window.open(base_url+"/preview.html")
+  window.open(base_url + '/preview.html')
 }
 
 function onDownload() {
@@ -116,6 +131,18 @@ function onDownload() {
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+}
+
+function onHomePage() {
+  window.open('https://www.xingyunzuo.cn/?from=demo')
+}
+
+function onGitee() {
+  window.open('https://gitee.com/Nebula-lowcode/nebulalowcode')
+}
+
+function onGithub() {
+  window.open('https://github.com/nebula-low-code/Nebula-lowcode')
 }
 
 function onMobilePreview({ key }: any) {
