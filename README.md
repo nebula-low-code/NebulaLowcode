@@ -28,6 +28,7 @@
 - [官网地址](https://www.xingyunzuo.cn?from=gitee)
 - [Demo地址](https://demo.xingyunzuo.com?from=gitee)
 - [Pro demo地址](https://test.xingyunzuo.com?from=gitee)
+- [培训视频](https://www.bilibili.com/video/BV1Y1421B7bp/?spm_id_from=333.337.search-card.all.click&vd_source=88e98143bb8f9f941ea8b11e2c2bd157)
 
 ## 官方群聊
 
