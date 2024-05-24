@@ -80,23 +80,23 @@ npm run dev
 
 <table>
 	<tr>
-        <td><img src="images/p1.png"/></td>
-        <td><img src="images/p2.png"/></td>
+        <td><img src=".images/p1.png"/></td>
+        <td><img src=".images/p2.png"/></td>
     </tr>	 
     <tr>
-        <td><img src="images/p3.png"/></td>
-        <td><img src="images/p4.png"/></td>
+        <td><img src=".images/p3.png"/></td>
+        <td><img src=".images/p4.png"/></td>
     </tr>
     <tr>
-        <td><img src="images/b1.png"/></td>
-        <td><img src="images/b2.png"/></td>
+        <td><img src=".images/b1.png"/></td>
+        <td><img src=".images/b2.png"/></td>
     </tr>
     <tr>
-        <td><img src="images/b3.png"/></td>
-        <td><img src="images/b4.png"/></td>
+        <td><img src=".images/b3.png"/></td>
+        <td><img src=".images/b4.png"/></td>
     </tr>
     <tr>
-        <td><img src="images/b5.png"/></td>
-        <td><img src="images/b6.png"/></td>
+        <td><img src=".images/b5.png"/></td>
+        <td><img src=".images/b6.png"/></td>
     </tr>
 </table>
