@@ -6,6 +6,9 @@
     <a href="https://gitee.com/Nebula-lowcode/nebulalowcode/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mashape/apistatus.svg"></a>
 </p>
 
+## 平台特色
+主打低代码中间件模式，集成嵌入软件产品，连接软件产品的数据库和接口，打通用户、数据和业务，提供低代码开发能力，扩展新功能，解决客户定制化需求，降低软件产品的实施服务成本
+
 ## 平台简介
 星云座是一款致力于解决传统软件开发痛点的低代码平台，通过简化开发流程、降低技术门槛、加快项目交付速度等特点，为用户提供了高效、灵活和成本效益的应用开发解决方案
 
