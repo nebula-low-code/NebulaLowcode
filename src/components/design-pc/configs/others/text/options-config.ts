@@ -1,4 +1,4 @@
-import { FormatType } from '@/utils/text-formatter'
+import { FormatType, FontSizeType } from '@/utils/text-formatter'
 
 export default {
   value: '文本',
@@ -9,7 +9,9 @@ export default {
     key: ''
   },
   textFormat: FormatType.NORMAL_TEXT,
+  fontSizeType: '',
   nowrap: false, //是否关闭自动换行
+  richText: false,
   styleEditorConfig: {
     textBgColor: '',
     textHtmlSize: 14,

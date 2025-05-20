@@ -1,5 +1,6 @@
 import { useDataStore } from '@/stores'
 import { WorkflowOutputs } from '@/utils/constants'
+import { isNetworkDatasource } from './string-utils'
 
 export function getParamValue(paramConfig: any, pageId?: any, rowData?: any) {
   const store = useDataStore()
@@ -7,6 +8,7 @@ export function getParamValue(paramConfig: any, pageId?: any, rowData?: any) {
   if (paramConfig.param_value_type === 'T') {
     //组件
     let comp = store.componentConfigByUuid(paramConfig.relevanceComponentUuid)
+
     if (comp) {
       value = comp.options.value
       //树形组件和树形选择器,绑定的输出值可能是label或者value,或者带有父节点路径信息的label或value
@@ -35,7 +37,55 @@ export function getParamValue(paramConfig: any, pageId?: any, rowData?: any) {
           valueStr = valueStr.substring(0, valueStr.length - 1)
         }
         value = valueStr
-      } else if ((comp.type === 'van-design-select' && comp.options.mode === 'multiple') || comp.type === 'van-design-checkbox' || comp.type === 'van-design-calendar-range') {
+      } else if (comp.type === 'van-design-calendar-range') {
+        // 如果null 进接口会有空指针问题，暂时在前端修复这个bug
+        value = ''
+        if (paramConfig.param_v_key == 'startDate') {
+          if (Array.isArray(comp.options.value) && comp.options.value.length > 1) {
+            value = comp.options.value[0]
+          }
+        } else if (paramConfig.param_v_key == 'endDate') {
+          if (Array.isArray(comp.options.value) && comp.options.value.length > 1) {
+            value = comp.options.value[1]
+          }
+        } else {
+          if (comp.options.value && comp.options.value.length > 0) {
+            value = comp.options.value.join(',')
+          } else {
+            value = ''
+          }
+        }
+      } else if (comp.type === 'van-design-select' && comp.options.mode != 'multiple') {
+        if (paramConfig.param_v_key == 'value') {
+          value = comp.options.value
+        } else if (paramConfig.param_v_key == 'label') {
+          value = comp.options.outputLabel
+        } else {
+          // 老配置
+          value = comp.options.value
+        }
+      } else if (comp.type === 'van-design-select' && comp.options.mode === 'multiple') {
+        if (paramConfig.param_v_key == 'value') {
+          if (comp.options.value && comp.options.value.length > 0) {
+            value = comp.options.value.join(',')
+          } else {
+            value = ''
+          }
+        } else if (paramConfig.param_v_key == 'label') {
+          if (comp.options.outputLabel && comp.options.outputLabel.length > 0) {
+            value = comp.options.outputLabel.join(',')
+          } else {
+            value = ''
+          }
+        } else {
+          // 老配置
+          if (comp.options.value && comp.options.value.length > 0) {
+            value = comp.options.value.join(',')
+          } else {
+            value = ''
+          }
+        }
+      } else if (comp.type === 'van-design-checkbox') {
         if (comp.options.value && comp.options.value.length > 0) {
           value = comp.options.value.join(',')
         } else {
@@ -59,7 +109,7 @@ export function getParamValue(paramConfig: any, pageId?: any, rowData?: any) {
       value = ''
     }
   } else if (paramConfig.param_value_type === 'B') {
-    if (paramConfig.type === 'radio-button-interface' || paramConfig.type === 'radio-button-connect') {
+    if (isNetworkDatasource(paramConfig.type)) {
       console.log('paramConfig=', paramConfig)
       if (rowData) {
         value = rowData[paramConfig.param_v_key]
@@ -87,4 +137,17 @@ export function getParamValue(paramConfig: any, pageId?: any, rowData?: any) {
   }
 
   return value
+}
+
+export function isFileArray(value: any) {
+  try {
+    const parsedData = JSON.parse(value)
+    if (Array.isArray(parsedData)) {
+      return true
+    }
+    return false
+  } catch (error) {
+    console.warn('JSON 解析错误:', error)
+    return false
+  }
 }

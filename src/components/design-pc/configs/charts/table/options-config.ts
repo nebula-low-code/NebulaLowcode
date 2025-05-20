@@ -8,7 +8,6 @@ export default {
     current: 1,
     pageSize: 5,
     total: 10,
-
     showSizeChanger: true,
     pageSizeOptions: ['5', '10', '20', '50', '100']
   },
@@ -18,7 +17,6 @@ export default {
     current: 1,
     pageSize: 5,
     total: 0,
-
     showSizeChanger: true,
     pageSizeOptions: ['5', '10', '20', '50', '100']
   }, // 是否进行分页
@@ -41,10 +39,15 @@ export default {
     uuid: '',
     key: '',
   },
+  leftFixedIndex:0,//左侧固定列数
   echoRowConfig:{},
   summaryRowConfig:{},
   expandSwitch:false,//一维数组树形展示
   expandId:"",
   expandParentId:"",
-  version:"2.0.0"
+  version:"2.0.0",
+  rowSelectMethod:"multiple",// 不显示，单选多选
+  columnSetSwitch:false,
+  resizableSwitch:false,//
+
 }

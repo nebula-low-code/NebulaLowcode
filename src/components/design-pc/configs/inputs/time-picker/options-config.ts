@@ -26,5 +26,6 @@ export default {
     uuid: '',
     key: '',
     value: ''
-  }
+  },
+  commonConfigAssignIsCol: false
 }

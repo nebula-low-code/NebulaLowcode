@@ -1,11 +1,15 @@
 import { defineStore } from 'pinia'
-import { queryApiDataService, getProcessParamService, getConnectTreeList } from '@/api/api'
-import { type pageConfigType, type paramConfig } from '@/utils/type'
+import { queryApiDataService, getProcessParamService } from '@/api/api'
+import { type pageConfigType, type modalConfigType, type paramConfig, type interfaceDataConfig, type databaseConfig } from '@/utils/type'
 import { CustomEventsType } from '@/utils/constants'
+import { transformComponentListTreeToPlan } from '@/utils/transform-data-list'
 
 export const useDataStore = defineStore('data', {
   state: () => {
     return {
+      isReadonly: false, //项目是否只读,只读项目需要隐藏保存按钮
+      execUrl: '',
+      executorSwitch: false,
       isShowLeftMenu: true,
       isShowRightMenu: true,
       rightMenuKey: 'basic', //右边栏当前打开的tab: basic/data
@@ -23,8 +27,10 @@ export const useDataStore = defineStore('data', {
       currentCheckedComponentUUID: '', // 当前选中的组件id
       currentCheckedComponent: {} as any, // 当前选中的组件
       componentListMap: {} as any, // 所有组件的组件字典
-      componentTreeList: [] as any[], //组件树
-      interfaceMap: {} as any, // 接口地图：格式为object
+      componentTreeList: [] as any[], //页面的组件树(不包含页面内弹窗)
+      pageInterfaceMap: {} as any, // 页面的接口(弹窗的接口和页面独立)
+      modalInterfaceMap: {} as any, //弹窗的接口,格式为:{窗口的uuid:interfaceMap}
+      allInterfaceMap: {} as any, //所有接口
 
       globalVariableList: [] as any[], //全局变量列表
       globalVariableMap: {} as any, //保存全局变量的字典
@@ -43,29 +49,134 @@ export const useDataStore = defineStore('data', {
 
       isShowTableColumnConfig: false, // 显示表格列配置
       isShowTableColumnChildrenConfig: false, // 显示表格子列配置
+      isShowTableColumnSubChildrenConfig: false, // 显示表格二级子列配置
       isShowTableOperateConfig: false, // 显示表格操作配置
       curColumn: {} as any, //表格配置列special
 
       deviceType: '', //pc或者mobile
+      merchantId: 0 as any,
+      projectId: 0 as any,
       token: '' as any,
       phone: '' as any,
       logoutFlag: false,
-      nebulaMessage: {} as any
+      nebulaMessage: {} as any,
+      mobileTransformScale: '1x',
+      currentModalUuid: 'page', //当前选中的弹窗uuid,page代表页面
+      modalComponentTreeListMap: {} as any, //弹窗里的组件树:{uuid:componentTreeList}
+      dataModelMap: {} as any //数据模型字典
     }
   },
   getters: {
-    globalConfig: (state) => state.pageConfig.config,
+    pageGlobalConfig: (state) => state.pageConfig.config,
     pageEventConfig: (state) => state.pageConfig.eventConfig,
-    interfaceList: (state) => Object.values(state.interfaceMap),
+    currentEvent: (state) => state.eventList.find((item: any) => item.eventType === state.eventType),
+    pageInterfaceList: (state) => Object.values(state.pageInterfaceMap), //页面接口列表
+    currentModalInterfaceList: (state) => (state.modalInterfaceMap[state.currentModalUuid] ? Object.values(state.modalInterfaceMap[state.currentModalUuid]) : []), //当前选中的弹窗的接口列表
+    interfaceList: (state) => {
+      let list: interfaceDataConfig[] = []
+      if (state.currentModalUuid === 'page') {
+        list = Object.values(state.pageInterfaceMap)
+      } else {
+        list = state.modalInterfaceMap[state.currentModalUuid] ? Object.values(state.modalInterfaceMap[state.currentModalUuid]) : []
+      }
+      console.log('interfaceList****', list)
+
+      return list
+    }, //当前的接口列表(页面或弹窗)
+    currentModalInterfaceMap: (state) => state.modalInterfaceMap[state.currentModalUuid],
     allComponentList: (state) => Object.values(state.componentListMap),
-    inputComponentList: (state) => Object.values(state.componentListMap).filter((item: any) => item.isInputComponent),
-    refreshComponentList: (state) => Object.values(state.componentListMap).filter((item: any) => item.isRefreshComponent),
+    allInputComponentList: (state) => Object.values(state.componentListMap).filter((item: any) => item.isInputComponent),
+    allRefreshComponentList: (state) => Object.values(state.componentListMap).filter((item: any) => item.isRefreshComponent),
+    currentImageComponentList: (state) => {
+      let list: any[] = []
+      if (state.currentModalUuid === 'page') {
+        list = Object.values(state.componentListMap).filter((item: any) => item.type === 'van-design-image')
+      } else {
+        //组件刷新,允许选择父页面和弹窗内的组件
+        if (state.modalComponentTreeListMap) {
+          let tempArr: any[] = []
+          transformComponentListTreeToPlan(state.modalComponentTreeListMap[state.currentModalUuid], tempArr)
+          list = tempArr.filter((item: any) => item.type === 'van-design-image')
+        }
+        if (state.componentTreeList) {
+          let tempArr: any[] = []
+          transformComponentListTreeToPlan(state.componentTreeList, tempArr)
+          let pageRefreshList = tempArr.filter((item: any) => item.type === 'van-design-image')
+          list = list.concat(pageRefreshList)
+        }
+      }
+      return list
+    },
+    currentRefreshComponentList: (state) => {
+      let list: any[] = []
+      if (state.currentModalUuid === 'page') {
+        list = Object.values(state.componentListMap).filter((item: any) => item.isRefreshComponent)
+      } else {
+        //组件刷新,允许选择父页面和弹窗内的组件
+        if (state.modalComponentTreeListMap) {
+          let tempArr: any[] = []
+          transformComponentListTreeToPlan(state.modalComponentTreeListMap[state.currentModalUuid], tempArr)
+          list = tempArr.filter((item: any) => item.isRefreshComponent)
+        }
+        if (state.componentTreeList) {
+          let tempArr: any[] = []
+          transformComponentListTreeToPlan(state.componentTreeList, tempArr)
+          let pageRefreshList = tempArr.filter((item: any) => item.isRefreshComponent)
+          list = list.concat(pageRefreshList)
+        }
+      }
+      return list
+    },
+    currentInputComponentList: (state) => {
+      let list: any[] = []
+      if (state.currentModalUuid === 'page') {
+        list = Object.values(state.componentListMap).filter((item: any) => item.isInputComponent)
+      } else {
+        //2025-02-11 区分弹窗以及页面的组件名称，通过添加前缀
+        let modalName = ''
+        state.pageConfig.modalList.forEach((modalItem: any) => {
+          if (modalItem.uuid == state.currentModalUuid) {
+            modalName = modalItem.config.reportName
+          }
+        })
+        if (modalName) {
+          modalName = `(${modalName})`
+        }
+        if (state.modalComponentTreeListMap) {
+          let tempArr: any[] = []
+          transformComponentListTreeToPlan(state.modalComponentTreeListMap[state.currentModalUuid], tempArr)
+          list = tempArr
+            .filter((item: any) => item.isInputComponent)
+            .map((item) => ({
+              ...item,
+              options: {
+                ...item.options,
+                commonConfigAssignName: modalName + item.options.commonConfigAssignName
+              }
+            }))
+        }
+        if (state.componentTreeList) {
+          let tempArr: any[] = []
+          transformComponentListTreeToPlan(state.componentTreeList, tempArr)
+          let pageRefreshList = tempArr.filter((item: any) => item.isInputComponent)
+          list = list.concat(pageRefreshList)
+        }
+      }
+      return list
+    },
+    modalList: (state) => state.pageConfig.modalList,
     containScanEvent: (state) => 'event-operate-scan' in state.customEvents,
     containWechatEvent: (state) => 'event-operate-wxlogin' in state.customEvents,
     containQyWechatEvent: (state) => 'event-operate-wxQyLogin' in state.customEvents,
     containOpenIdEvent: (state) => 'event-operate-openid' in state.customEvents,
     containGetTokenEvent: (state) => 'event-operate-token-get' in state.customEvents,
-    containMap: (state) => 'event-operate-map' in state.customEvents
+    containIAMTokenEvent: (state) => 'event-operate-iam-code' in state.customEvents,
+    containGetLanguageEvent: (state) => 'event-operate-get-language' in state.customEvents,
+    containMap: (state) => 'event-operate-map' in state.customEvents,
+    containDataInsertEvent: (state) => 'event-data-insert' in state.customEvents,
+    currentModalConfig: (state) => state.pageConfig.modalList.find((item) => item.uuid === state.currentModalUuid) || ({} as modalConfigType),
+    currentModalComponentTreeList: (state) => state.modalComponentTreeListMap[state.currentModalUuid],
+    isPageDesigner: (state) => state.currentModalUuid === 'page'
   },
   actions: {
     openEventDialog(type: string, componentType: 'component' | 'page' | 'workflow' | 'column') {
@@ -87,7 +198,12 @@ export const useDataStore = defineStore('data', {
         this.eventList = this.curColumn.confirmEventList
       } else {
         if (this.pageConfig && this.pageConfig.eventConfig) {
-          this.eventList = this.pageConfig.eventConfig.eventList
+          if (this.isPageDesigner) {
+            this.eventList = this.pageConfig.eventConfig.eventList
+          } else {
+            this.eventList = this.currentModalConfig.eventConfig.eventList
+          }
+          console.log('eventList----', this.eventList)
         } else {
           this.eventList = []
         }
@@ -97,14 +213,8 @@ export const useDataStore = defineStore('data', {
       this.interfaceListAll = []
       //自定义事件
       this.queryCustomEvents()
-      // //后端接口
-      // this.queryInterfaceDataList()
-      // //第三方接口
-      // this.queryConnectList()
-      // //事件中配置的所有接口请求
-      // this.queryEventInterfaceList()
-      // //页面
-      // this.queryReportTreeList()
+      //事件中配置的所有接口请求
+      this.queryEventInterfaceList()
     },
     openStatusDialog() {
       this.dialogStatusVisible = true
@@ -120,12 +230,17 @@ export const useDataStore = defineStore('data', {
     queryCustomEvents() {
       //遍历事件列表,找出所有自定义事件
       let actionList = []
-      for (const event of this.eventList) {
-        if (event.eventType === this.eventType) {
-          actionList = event.actionList
-          break
+      if (this.eventList) {
+        for (const event of this.eventList) {
+          if (event.eventType === this.eventType) {
+            actionList = event.actionList
+            break
+          }
         }
+      } else {
+        this.eventList = []
       }
+
       for (const action of actionList) {
         if (CustomEventsType.indexOf(action.type) > -1) {
           this.saveCustomEvent(action.type, action.title)
@@ -133,38 +248,22 @@ export const useDataStore = defineStore('data', {
       }
     },
 
-    // queryInterfaceDataList() {
-    //   getProjectFileTreeList().then((res: any) => {
-    //     this.interfaceListAll.push({
-    //       dataType: 'directory',
-    //       name: '后端接口',
-    //       queryId: 1,
-    //       rank: 1,
-    //       treeId: 1,
-    //       children: res.dataList || []
-    //     })
-    //   })
-    // },
-    // queryConnectList() {
-    //   getConnectTreeList().then((res: any) => {
-    //     if (res.code == 0) {
-    //       this.interfaceListAll.push(...res.dataList)
-    //     }
-    //   })
-    // },
-
     queryEventInterfaceList() {
       //遍历事件列表,找出所有接口调用事件,请求接口的返回值并放入store中
       let actionList = []
-      for (const event of this.eventList) {
-        if (event.eventType === this.eventType) {
-          actionList = event.actionList
-          break
+      if (this.eventList) {
+        for (const event of this.eventList) {
+          if (event.eventType === this.eventType) {
+            actionList = event.actionList
+            break
+          }
         }
+      } else {
       }
+
       this.eventInterfaceList = []
       for (const action of actionList) {
-        if (action.type === 'event-operate-interface' || action.type === 'event-operate-export' || action.type === 'event-operate-import') {
+        if (action.type === 'event-operate-interface' || action.type === 'event-operate-export' || action.type === 'event-operate-import' || action.type === 'event-operate-template-export') {
           getProcessParamService({
             processId: action.properties.operateApiId
           }).then((res) => {
@@ -180,13 +279,6 @@ export const useDataStore = defineStore('data', {
       }
     },
 
-    queryReportTreeList() {
-      getReportTreeList({
-        queryType: this.deviceType
-      }).then((res: any) => {
-        this.reportTreeList = res.dataList || []
-      })
-    },
     findParentObjects(data: any, targetUuid: string, path = []) {
       if (data.uuid === targetUuid) {
         return path
@@ -211,6 +303,29 @@ export const useDataStore = defineStore('data', {
           }
         }
       }
+      if (data.type === 'van-design-custom-table') {
+        if (data.options.columnsConfigList) {
+          const config = data.options.columnsConfigList[0]
+          for (const key in config) {
+            let componentList = config[key]
+            if (componentList && componentList.length > 0) {
+              for (const component of componentList) {
+                if (component.uuid === targetUuid) {
+                  return path.concat(data)
+                }
+
+                if (component.options) {
+                  const currentPath = path.concat(data)
+                  const result: any[] = this.findParentObjects(component, targetUuid, currentPath)
+                  if (result.length > 0) {
+                    return result
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
       return []
     },
 
@@ -219,20 +334,35 @@ export const useDataStore = defineStore('data', {
       this.currentCheckedComponent = this.componentListMap[uuid] || {}
       this.isShowTableColumnConfig = false
       this.isShowTableColumnChildrenConfig = false
+      this.isShowTableColumnSubChildrenConfig = false
       this.isShowTableOperateConfig = false
     },
     currentComponentParentList() {
       let list = []
       let comp = this.componentListMap[this.currentCheckedComponentUUID]
       if (comp) {
-        let tree = {
-          type: 'page',
-          options: {
-            columns: [
-              {
-                componentList: this.componentTreeList
-              }
-            ]
+        let tree = {}
+        if (this.isPageDesigner) {
+          tree = {
+            type: 'page',
+            options: {
+              columns: [
+                {
+                  componentList: this.componentTreeList
+                }
+              ]
+            }
+          }
+        } else {
+          tree = {
+            type: 'modal',
+            options: {
+              columns: [
+                {
+                  componentList: this.currentModalComponentTreeList
+                }
+              ]
+            }
           }
         }
         list = this.findParentObjects(tree, comp.uuid)
@@ -273,12 +403,39 @@ export const useDataStore = defineStore('data', {
       }
       return this.pageVariableMap[key]
     },
-    setInterfaceData(id: any, data: object) {
-      this.interfaceMap[id] = data
+    // setComponentByUuid(uuid: string, componentItem: object, modalId?: string) {
+    //   if (modalId && modalId !== 'page') {
+    //     this.setModalInterfaceData(modalId, id, data)
+    //   } else {
+    //     this.componentListMap[uuid] = componentItem
+    //   }
+    //   this.allInterfaceMap[id] = data
+    // },
+    // setModalComponent(modalId: string, componentUuid: any, componentItem: object) {
+    //   if (!this.modalInterfaceMap[modalId]) {
+    //     this.modalInterfaceMap[modalId] = {}
+    //   }
+    //   this.modalInterfaceMap[modalId][interfaceId] = data
+    // },
+    setInterfaceData(id: any, data: object, modalId?: string) {
+      if (modalId && modalId !== 'page') {
+        this.setModalInterfaceData(modalId, id, data)
+      } else {
+        this.pageInterfaceMap[id] = data
+      }
+      this.allInterfaceMap[id] = data
     },
-
+    setDataModel(id: any, data: object) {
+      this.dataModelMap[id] = data
+    },
     clearInterfaceData() {
-      this.interfaceMap = {}
+      this.pageInterfaceMap = {}
+    },
+    setModalInterfaceData(modalId: string, interfaceId: any, data: object) {
+      if (!this.modalInterfaceMap[modalId]) {
+        this.modalInterfaceMap[modalId] = {}
+      }
+      this.modalInterfaceMap[modalId][interfaceId] = data
     },
 
     addInterface(interfaceConfig: any) {
@@ -288,42 +445,42 @@ export const useDataStore = defineStore('data', {
         .then((res) => {
           if (res.data) {
             interfaceConfig.data.responseData = res.data || {}
-            this.interfaceMap[interfaceConfig.id] = interfaceConfig
-
-            //入参
-            getProcessParamService({ processId: interfaceConfig.data.id }).then((paramRes) => {
-              if (paramRes.data) {
-                let params = paramRes.data.params
-                interfaceConfig.data.paramsConfigs = []
-                for (const param of params) {
-                  interfaceConfig.data.paramsConfigs.push({
-                    param_name: param.name,
-                    param_value: ''
-                  })
-                }
-              }
-            })
           }
+          this.setInterfaceData(interfaceConfig.id, interfaceConfig, this.currentModalUuid)
+          //入参
+          this.queryProcessParam(interfaceConfig)
         })
         .catch((err) => {
-          this.interfaceMap[interfaceConfig.id] = interfaceConfig
+          this.setInterfaceData(interfaceConfig.id, interfaceConfig, this.currentModalUuid)
+          this.queryProcessParam(interfaceConfig)
         })
-
-      //入参
-      // let paramRes = await getProcessParamService({ processId: interfaceConfig.data.id })
-      // if (paramRes.data) {
-      //   let params = paramRes.data.params
-      //   interfaceConfig.data.paramsConfigs = []
-      //   for (const param of params) {
-      //     interfaceConfig.data.paramsConfigs.push({
-      //       param_name: param.name,
-      //       param_value: ''
-      //     })
-      //   }
-      // }
+    },
+    queryProcessParam(interfaceConfig: any) {
+      getProcessParamService({ processId: interfaceConfig.data.id }).then((paramRes) => {
+        if (paramRes.data) {
+          let params = paramRes.data.params
+          interfaceConfig.data.paramsConfigs = []
+          for (const param of params) {
+            interfaceConfig.data.paramsConfigs.push({
+              param_name: param.name,
+              param_value: ''
+            })
+          }
+        }
+      })
     },
     interfaceDataById(id: any) {
-      return this.interfaceMap[id]
+      return this.allInterfaceMap[id]
+    },
+    dataModelById(id: any) {
+      return this.dataModelMap[id]
+    },
+    modalInterfaceListByUuid(uuid: string) {
+      if (this.modalInterfaceMap[uuid]) {
+        return Object.values(this.modalInterfaceMap[uuid])
+      } else {
+        return []
+      }
     },
     showTableColumnConfig() {
       this.isShowTableColumnConfig = true
@@ -332,7 +489,13 @@ export const useDataStore = defineStore('data', {
     showTableColumnChildrenConfig() {
       this.isShowTableColumnConfig = false
       this.isShowTableColumnChildrenConfig = true
+      this.isShowTableColumnSubChildrenConfig = false
       // this.curColumn=column;
+    },
+    showTableColumnSubChildrenConfig() {
+      this.isShowTableColumnConfig = false
+      this.isShowTableColumnChildrenConfig = false
+      this.isShowTableColumnSubChildrenConfig = true
     },
     showTableOperateConfig() {
       this.isShowTableOperateConfig = true
@@ -344,7 +507,13 @@ export const useDataStore = defineStore('data', {
     closeTableColumnChildrenConfig() {
       this.isShowTableColumnConfig = true
       this.isShowTableColumnChildrenConfig = false
+      this.isShowTableColumnSubChildrenConfig = false
       // this.curColumn={};
+    },
+    backToColumnChildrenConfig() {
+      this.isShowTableColumnConfig = false
+      this.isShowTableColumnChildrenConfig = true
+      this.isShowTableColumnSubChildrenConfig = false
     },
     closeTableOperateConfig() {
       this.isShowTableOperateConfig = false
@@ -355,6 +524,46 @@ export const useDataStore = defineStore('data', {
     },
     deleteCustomEvent(key: string) {
       delete this.customEvents[key]
+    },
+    deleteModalConfig(uuid: string) {
+      this.pageConfig.modalList = this.modalList.filter((item: any) => item.uuid !== uuid)
+    },
+    componentListByType(type: string) {
+      let comps = []
+      if (this.isPageDesigner) {
+        comps = this.allComponentList
+      } else {
+        if (this.modalComponentTreeListMap) {
+          let tempArr: any[] = []
+          transformComponentListTreeToPlan(this.modalComponentTreeListMap[this.currentModalUuid], tempArr)
+          comps = tempArr
+        }
+        if (this.componentTreeList) {
+          let tempArr: any[] = []
+          transformComponentListTreeToPlan(this.componentTreeList, tempArr)
+          comps = comps.concat(tempArr)
+        }
+      }
+      return comps.filter((item) => item.type === type)
+    }
+  }
+})
+
+import defaultTheme from '@/styles/defaultTheme.json'
+import { cloneDeep } from 'lodash'
+//主题
+export const useThemeStore = defineStore('theme', {
+  state() {
+    return {
+      defaultTheme: { token: cloneDeep(defaultTheme.token) },
+      themeConfig: { token: cloneDeep(defaultTheme.token) }
+    }
+  },
+  actions: {
+    updateTheme(theme: any) {
+      if (theme && theme.token) {
+        this.themeConfig.token = Object.assign(this.themeConfig.token, theme.token)
+      }
     }
   }
 })

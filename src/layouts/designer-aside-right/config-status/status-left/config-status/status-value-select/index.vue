@@ -5,6 +5,7 @@
 import { computed } from 'vue'
 import { useDataStore } from '@/stores'
 import { DataSourceType } from '@/utils/constants'
+import { isNetworkDatasource } from '@/utils/string-utils'
 
 const props = defineProps<{
   paramItem: any
@@ -50,6 +51,29 @@ const options = computed(() => {
     value: DataSourceType.COMPONENT,
     children: []
   } as any
+  const optionsGlobal = {
+    type: DataSourceType.GLOBAL,
+    label: '全局变量',
+    value: DataSourceType.GLOBAL,
+    children: []
+  } as any
+  const optionsFunction = {
+    type: DataSourceType.FUNCTION,
+    label: '函数脚本',
+    value: DataSourceType.FUNCTION,
+    children: [
+      {
+        value: 'function',
+        label: '函数',
+        children: []
+      },
+      {
+        value: 'script',
+        label: '脚本',
+        children: []
+      }
+    ]
+  } as any
 
   let options = []
   if (!props.hidePageParam) {
@@ -60,6 +84,12 @@ const options = computed(() => {
   }
   if (!props.hideComponent) {
     options.push(optionsComponent)
+  }
+  if (!props.hideGlobal) {
+    options.push(optionsGlobal)
+  }
+  if (!props.hideFunction) {
+    options.push(optionsFunction)
   }
 
   //页面入参
@@ -83,16 +113,39 @@ const options = computed(() => {
     })
 
   //组件
-  store.inputComponentList.forEach((componentItem: any) => {
+  store.allInputComponentList.forEach((componentItem: any) => {
     optionsComponent.children.push({
       label: componentItem.options.commonConfigAssignName,
       value: componentItem.uuid
     })
   })
 
+  //全局变量
+  let globalList = store.globalVariableList
+  globalList.forEach((group: any) => {
+    let groupOption = {
+      type: DataSourceType.GLOBAL,
+      label: group.scopeName,
+      value: group.scopeId,
+      children: [] as any[]
+    }
+    group.children.forEach((variable: any) => {
+      groupOption.children.push({
+        type: DataSourceType.GLOBAL,
+        label: variable.variableKey,
+        value: variable.variableKey
+      })
+    })
+    optionsGlobal.children.push(groupOption)
+  })
+
+  // 函数脚本
+  optionsFunction.children[0].children = renameFunctionItem(store.functionList)
+  optionsFunction.children[1].children = renameFunctionItem(store.scriptList)
+
   //接口
   if (!props.hideInterface) {
-    let interfaceList: any[] = store.interfaceList
+    let interfaceList = store.interfaceList
     for (const interfaceItem of interfaceList) {
       const childrenData = []
       const responseData = interfaceItem.data.responseData || {}
@@ -140,7 +193,56 @@ const options = computed(() => {
 
   return options
 })
+function renameFunctionItem(list: any[]) {
+  let renamedList = []
+  for (const scriptListElement of list) {
+    // console.log('scriptListElement=', scriptListElement)
 
+    let renamedItem = {
+      value: scriptListElement.queryId,
+      label: scriptListElement.name,
+      id: scriptListElement.queryId,
+      type: scriptListElement.dataType,
+      children: [] as any[]
+    }
+    if (scriptListElement.children != undefined && scriptListElement.children.length > 0) {
+      for (const scriptListElementElement of scriptListElement.children) {
+        renamedItem.children.push({
+          value: scriptListElementElement.queryId,
+          label: scriptListElementElement.name,
+          id: scriptListElementElement.queryId,
+          type: scriptListElement.dataType,
+          children: parseFunctionReturnValue(scriptListElementElement.functionOutput)
+        })
+      }
+    } else if (scriptListElement.dataType === 'report') {
+      //dataType === 'report'代表是函数脚本,'scope'代表分组
+      renamedItem.children = parseFunctionReturnValue(scriptListElement.functionOutput) || []
+    }
+    renamedList.push(renamedItem)
+  }
+  return renamedList
+}
+
+function parseFunctionReturnValue(value: any) {
+  if (value === undefined || value === null) {
+    return undefined
+  }
+  let returnObj = JSON.parse(value)
+  let returnParams = []
+  for (let prop in returnObj) {
+    if (returnObj.hasOwnProperty(prop)) {
+      returnParams.push({
+        value: prop,
+        label: prop,
+        id: prop,
+        type: 'returnValue',
+        children: undefined
+      })
+    }
+  }
+  return returnParams
+}
 /**
  * 级联选择各组件的层级判断
  *
@@ -169,7 +271,7 @@ function onChange(values: any, selectedOptions: any) {
       //组件
       props.paramItem.param_value_type = 'T'
       props.paramItem.relevanceComponentUuid = selectedOptions[1].value
-    } else if (dataSourceType === DataSourceType.INTERFACE || dataSourceType === dataSourceType.CONNECT) {
+    } else if (isNetworkDatasource(dataSourceType)) {
       //接口
       props.paramItem.param_value_type = 'B'
       props.paramItem.type = selectedOptions[0].type

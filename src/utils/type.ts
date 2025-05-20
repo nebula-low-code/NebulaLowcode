@@ -52,6 +52,13 @@ type paramConfig = {
   //页面局部变量
   variableName: string
   variableValue: string
+  defaultValue: string
+
+  //数据库
+  columnName: ''
+  columnValue: ''
+  condition: ''
+  connectType: ''
 }
 
 type interfaceDataConfig = {
@@ -71,10 +78,37 @@ type interfaceDataConfig = {
     // 后端服务类型
     paramsConfigs: paramConfig[]
     // mock数据
+    responseDataTypes: any
     responseData: any
     mockResponseData: any
   }
   [propName: string]: any
+}
+
+type databaseConfig = {
+  id: string | number
+  uuid: string
+  type: string
+  key: string
+  name: string
+  bindDataKey: string
+  params: databaseParamType
+  data: {
+    id: number | string
+    responseData: any
+  }
+  [propName: string]: any
+}
+
+type databaseParamType = {
+  conditionColumns: any[]
+  dbConfigId: number
+  limit: number
+  limitType: string
+  orderField: string
+  selectColumns: any[]
+  sortType: string
+  tableName: string
 }
 
 // 页面全局配置类型
@@ -89,6 +123,9 @@ type pageGlobalConfigType = {
   backgroundColor: string
   remark: string
   interfaceDataConfig: any[]
+  databaseConfig: any[]
+  sqlScriptConfig: any[]
+  difyConfig: any[]
   // 布局
   topPaddingDistance: number
   rightPaddingDistance: number
@@ -152,6 +189,16 @@ type pageConfigType = {
   config: pageGlobalConfigType
   groupList: any
   eventConfig: any
+  modalList: modalConfigType[]
+}
+
+// 弹窗配置类型
+type modalConfigType = {
+  list: componentConfigItemType[]
+  config: pageGlobalConfigType
+  eventConfig: any
+  title: string
+  uuid: string
 }
 
 //echarts配置
@@ -173,9 +220,11 @@ export type {
   eventActionConfig,
   paramConfig,
   interfaceDataConfig,
+  databaseConfig,
   componentConfigItemType,
   pageGlobalConfigType,
   pageConfigType,
+  modalConfigType,
   componentGroupType,
   componentOptionsType,
   echartsOptions

@@ -13,13 +13,13 @@
       <a-form-item label="类型">
         <ValueSelect :options="options" value-key="inputType" :select-option="inputTypeOptions"></ValueSelect>
       </a-form-item>
-      <a-form-item label="自适应" v-if="options.inputType=='textarea'">
+      <a-form-item label="自适应" v-if="options.inputType == 'textarea'">
         <a-switch v-model:checked="options.autoSize" />
       </a-form-item>
-      <a-form-item label="最小行数" v-if="options.inputType=='textarea'&&!options.autoSize">
+      <a-form-item label="最小行数" v-if="options.inputType == 'textarea' && !options.autoSize">
         <a-input-number style="width: 100%" v-model:value.number="options.minRows" />
       </a-form-item>
-      <a-form-item label="最大行数" v-if="options.inputType=='textarea'&&!options.autoSize">
+      <a-form-item label="最大行数" v-if="options.inputType == 'textarea' && !options.autoSize">
         <a-input-number style="width: 100%" v-model:value.number="options.maxRows" />
       </a-form-item>
 
@@ -65,6 +65,10 @@ const inputTypeOptions = [
   {
     label: '密码',
     value: 'password'
+  },
+  {
+    label: '数字',
+    value: 'number'
   }
 ]
 
@@ -86,6 +90,4 @@ const sizeOptions = [
 const options = computed(() => store.currentCheckedComponent.options)
 </script>
 
-<stylescoped>
-
-</stylescoped>
+<style scoped></style>

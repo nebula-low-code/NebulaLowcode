@@ -6,6 +6,7 @@ export default {
   name: '多项输入',
   icon: 'iconwenbenkuang',
   isInputComponent: true, // 是否为输入组件
+  isNestedComponent: true, // 是否为容器组件
   component: layoutTemplate,
   options: optionsConfig,
   extraData: {

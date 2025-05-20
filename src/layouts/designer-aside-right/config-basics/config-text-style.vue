@@ -12,7 +12,7 @@
             }"
             class="style-button"
             :class="{
-              'selected-style-button': item.fontSize == styleEditorConfig.textHtmlSize && item.fontWeight == styleEditorConfig.textHtmlBlod && item.color == styleEditorConfig.textColor
+              'selected-style-button': item.type == options.fontSizeType
             }"
           >
             {{ textStyleName(index) }}
@@ -21,7 +21,7 @@
       </div>
 
       <li>
-        <a-select v-model:value="styleEditorConfig.textHtmlSize" style="width: 145px" @change="selsetChangeStyle($event, 'size')">
+        <a-select v-model:value="options[styleKey].textHtmlSize" style="width: 145px" @change="selectChangeStyle($event, 'size')">
           <a-select-option v-for="item in sizeList" :key="item" :label="item" :value="item" />
         </a-select>
       </li>
@@ -31,11 +31,11 @@
             <i
               class="iconfont iconzitiyanse iconStyle"
               :style="{
-                color: styleEditorConfig.textColor,
-                background: styleEditorConfig.textBgColor
+                color: options[styleKey].textColor,
+                background: options[styleKey].textBgColor
               }"
             />
-            <ColorPicker :key="1" :value="styleEditorConfig.textBgColor" style="visibility: hidden" :leftPadding="-100" :topPadding="10" @change="changeBGColor" :openStatus="showBGColorPicker" />
+            <ColorPicker :key="1" :value="options[styleKey].textBgColor" style="visibility: hidden" :leftPadding="-100" :topPadding="10" @change="changeBGColor" :openStatus="showBGColorPicker" />
           </span>
           <span></span>
         </div>
@@ -43,8 +43,8 @@
       <li style="margin-top: -4px; padding: 0px 0px 0px 12px">
         <div class="colorSetting" @click.stop="showColorPicker = !showColorPicker">
           <span>
-            <i class="iconfont iconzitiyanse iconStyles" :style="{ color: styleEditorConfig.textColor }" />
-            <ColorPicker :key="2" :value="styleEditorConfig.textColor" style="visibility: hidden" :leftPadding="-140" :topPadding="10" @change="changeColor" :openStatus="showColorPicker" />
+            <i class="iconfont iconzitiyanse iconStyles" :style="{ color: options[styleKey].textColor }" />
+            <ColorPicker :key="2" :value="options[styleKey].textColor" style="visibility: hidden" :leftPadding="-140" :topPadding="10" @change="changeColor" :openStatus="showColorPicker" />
           </span>
           <span></span>
         </div>
@@ -52,233 +52,297 @@
     </ul>
     <ul style="overflow: hidden; width: 100%">
       <li>
-        <i class="iconfont iconzuoduiqi1" :class="activeLeftPosit ? 'active' : ''" @click.prevent="selsetChangeStyle($event, 'left')" />
+        <i class="iconfont iconzuoduiqi1" :class="activeLeftPosit ? 'active' : ''" @click.prevent="selectChangeStyle($event, 'left')" />
       </li>
       <li>
-        <i class="iconfont iconjuzhongduiqi" :class="activeCenterPosit ? 'active' : ''" @click.prevent="selsetChangeStyle($event, 'center')" />
+        <i class="iconfont iconjuzhongduiqi" :class="activeCenterPosit ? 'active' : ''" @click.prevent="selectChangeStyle($event, 'center')" />
       </li>
       <li>
-        <i class="iconfont iconyouduiqi1" :class="activeRightPosit ? 'active' : ''" @click.prevent="selsetChangeStyle($event, 'right')" />
+        <i class="iconfont iconyouduiqi1" :class="activeRightPosit ? 'active' : ''" @click.prevent="selectChangeStyle($event, 'right')" />
       </li>
       <li>
-        <i class="iconfont iconzitijiacu" :class="activeTextHtmlBlod ? 'activeBlod' : ''" @click.prevent="selsetChangeStyle($event, 'blod')" />
+        <i class="iconfont iconzitijiacu" :class="activeTextHtmlBlod ? 'activeBlod' : ''" @click.prevent="selectChangeStyle($event, 'blod')" />
       </li>
       <li>
-        <i class="iconfont iconzitixieti" :class="activeTextHtmlTilt ? 'activeTilt' : ''" @click.prevent="selsetChangeStyle($event, 'xieti')" />
+        <i class="iconfont iconzitixieti" :class="activeTextHtmlTilt ? 'activeTilt' : ''" @click.prevent="selectChangeStyle($event, 'xieti')" />
       </li>
       <li>
-        <i class="iconfont iconzitixiahuaxian" :class="activeTextHtmlUnder ? 'activeUnder' : ''" @click.prevent="selsetChangeStyle($event, 'under')" />
+        <i class="iconfont iconzitixiahuaxian" :class="activeTextHtmlUnder ? 'activeUnder' : ''" @click.prevent="selectChangeStyle($event, 'under')" />
       </li>
     </ul>
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
 import ColorPicker from '@/components/tools/color-picker/index.vue'
+import { FontSizeType } from '@/utils/text-formatter'
+import { useDataStore } from '@/stores'
 /**
  * 文本组件的配置组件
  */
-export default {
-  name: 'text-style-editor',
-  props: {
-    styleEditorConfig: {
-      type: Object,
-      default: () => {}
-    },
-    hideStyleSelector: {
-      type: Boolean,
-      default: () => false
-    }
-  },
-  components: {
-    ColorPicker
-  },
-  data() {
-    return {
-      sizeList: [10, 10.5, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36],
-      styleList: [
-        {
-          fontSize: '20',
-          fontWeight: 'bold',
-          color: '#333333'
-        },
-        {
-          fontSize: '18',
-          fontWeight: 'bold',
-          color: '#333333'
-        },
-        {
-          fontSize: '16',
-          fontWeight: 'bold',
-          color: '#333333'
-        },
-        {
-          fontSize: '14',
-          fontWeight: '',
-          color: '#333333'
-        },
-        {
-          fontSize: '12',
-          fontWeight: '',
-          color: '#333333'
-        },
-        {
-          fontSize: '10',
-          fontWeight: '',
-          color: '#333333'
-        }
-      ],
-      activeCenterPosit: false, // 选中的
-      activeLeftPosit: false,
-      activeRightPosit: false,
-      activeTextHtmlBlod: false,
-      activeTextHtmlTilt: false,
-      activeTextHtmlUnder: false,
-      showColorPicker: false,
-      showBGColorPicker: false
-    }
-  },
-  created() {
-    if (this.styleEditorConfig.textHtmlPosit !== undefined || this.styleEditorConfig.textHtmlPosit !== null) {
-      if (this.styleEditorConfig.textHtmlPosit === '') {
-        this.activeLeftPosit = false
-        this.activeCenterPosit = false
-        this.activeRightPosit = false
-      } else if (this.styleEditorConfig.textHtmlPosit === 'left') {
-        this.activeCenterPosit = false
-        this.activeRightPosit = false
-        this.activeLeftPosit = true
-      } else if (this.styleEditorConfig.textHtmlPosit === 'right') {
-        this.activeCenterPosit = false
-        this.activeRightPosit = true
-        this.activeLeftPosit = false
-      } else if (this.styleEditorConfig.textHtmlPosit === 'center') {
-        this.activeCenterPosit = true
-        this.activeRightPosit = false
-        this.activeLeftPosit = false
-      }
-    }
-    if (this.styleEditorConfig.textHtmlBlod !== undefined || this.styleEditorConfig.textHtmlBlod !== null) {
-      if (this.styleEditorConfig.textHtmlBlod === '') {
-        this.activeTextHtmlBlod = false
-      } else {
-        this.activeTextHtmlBlod = true
-      }
-    }
-    if (this.styleEditorConfig.textHtmlTilt !== undefined || this.styleEditorConfig.textHtmlTilt !== null) {
-      if (this.styleEditorConfig.textHtmlTilt === '') {
-        this.activeTextHtmlTilt = false
-      } else {
-        this.activeTextHtmlTilt = true
-      }
-    }
-    if (this.styleEditorConfig.textHtmlUnder !== undefined || this.styleEditorConfig.textHtmlUnder !== null) {
-      if (this.styleEditorConfig.textHtmlUnder === '') {
-        this.activeTextHtmlUnder = false
-      } else {
-        this.activeTextHtmlUnder = true
-      }
-    }
-  },
-  methods: {
-    textStyleName(index: number) {
-      switch (index) {
-        case 0:
-          return '大标题'
-        case 1:
-          return '中标题'
-        case 2:
-          return '小标题'
-        case 3:
-          return '正文'
-        case 4:
-          return '辅助说明'
-        case 5:
-          return '备注'
-      }
-    },
+const props = withDefaults(
+  defineProps<{
+    options: any
+    styleKey?: string
+    hideStyleSelector?: boolean
+  }>(),
+  {
+    styleKey: 'styleEditorConfig',
+    hideStyleSelector: false
+  }
+)
 
-    selectTextStyle(style: any) {
-      if (style.fontWeight == 'bold') {
-        this.styleEditorConfig.textHtmlBlod = 'bold'
-        this.activeTextHtmlBlod = true
-      } else {
-        this.styleEditorConfig.textHtmlBlod = ''
-        this.activeTextHtmlBlod = false
-      }
-      this.styleEditorConfig.textHtmlSize = style.fontSize
-      this.styleEditorConfig.textColor = style.color
-    },
+watch(
+  () => props.options[props.styleKey],
+  () => {
+    initStyle()
+  }
+)
 
-    selsetChangeStyle(value: any, type: string) {
-      if (type === 'size') {
-        this.styleEditorConfig.textHtmlSize = value
-      } else if (type === 'left') {
-        this.activeCenterPosit = false
-        this.activeRightPosit = false
-        if (this.styleEditorConfig.textHtmlPosit !== 'left') {
-          this.styleEditorConfig.textHtmlPosit = 'left'
-          this.activeLeftPosit = true
-        } else {
-          this.styleEditorConfig.textHtmlPosit = ''
-          this.activeLeftPosit = false
+const store = useDataStore()
+const sizeList = [10, 10.5, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36]
+const styleList =
+  store.deviceType === 'pc'
+    ? [
+        {
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING1
+        },
+        {
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING2
+        },
+        {
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING3
+        },
+        {
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING4
+        },
+        {
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING5
         }
-      } else if (type === 'center') {
-        this.activeLeftPosit = false
-        this.activeRightPosit = false
-        if (this.styleEditorConfig.textHtmlPosit !== 'center') {
-          this.styleEditorConfig.textHtmlPosit = 'center'
-          this.activeCenterPosit = true
-        } else {
-          this.styleEditorConfig.textHtmlPosit = ''
-          this.activeCenterPosit = false
+      ]
+    : [
+        {
+          fontSize: 20,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING1
+        },
+        {
+          fontSize: 18,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING2
+        },
+        {
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING3
+        },
+        {
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING4
+        },
+        {
+          fontSize: 12,
+          fontWeight: 'bold',
+          color: '#333333',
+          type: FontSizeType.HEADING5
         }
-      } else if (type === 'right') {
-        this.activeLeftPosit = false
-        this.activeCenterPosit = false
-        if (this.styleEditorConfig.textHtmlPosit !== 'right') {
-          this.styleEditorConfig.textHtmlPosit = 'right'
-          this.activeRightPosit = true
-        } else {
-          this.styleEditorConfig.textHtmlPosit = ''
-          this.activeRightPosit = false
-        }
-      } else if (type === 'blod') {
-        if (this.styleEditorConfig.textHtmlBlod) {
-          this.styleEditorConfig.textHtmlBlod = ''
-          this.activeTextHtmlBlod = false
-        } else {
-          this.styleEditorConfig.textHtmlBlod = 'bold'
-          this.activeTextHtmlBlod = true
-        }
-      } else if (type === 'xieti') {
-        if (this.styleEditorConfig.textHtmlTilt) {
-          this.styleEditorConfig.textHtmlTilt = ''
-          this.activeTextHtmlTilt = false
-        } else {
-          this.styleEditorConfig.textHtmlTilt = 'italic' || 'oblique'
-          this.activeTextHtmlTilt = true
-        }
-      } else if (type === 'under') {
-        if (this.styleEditorConfig.textHtmlUnder) {
-          this.styleEditorConfig.textHtmlUnder = ''
-          this.activeTextHtmlUnder = false
-        } else {
-          this.styleEditorConfig.textHtmlUnder = 'underline'
-          this.activeTextHtmlUnder = true
-        }
-      }
-    },
+      ]
+const activeCenterPosit = ref(false) // 选中的
+const activeLeftPosit = ref(false)
+const activeRightPosit = ref(false)
+const activeTextHtmlBlod = ref(false)
+const activeTextHtmlTilt = ref(false)
+const activeTextHtmlUnder = ref(false)
+const showColorPicker = ref(false)
+const showBGColorPicker = ref(false)
 
-    changeBGColor(color: any) {
-      this.showBGColorPicker = false
-      this.styleEditorConfig.textBgColor = color
-    },
-    changeColor(color: any) {
-      this.showColorPicker = false
-      this.styleEditorConfig.textColor = color
+//接收index参数
+const textStyleName = computed(() => (index: number) => {
+  if (store.deviceType === 'pc') {
+    switch (index) {
+      case 0:
+        return '一级标题'
+      case 1:
+        return '二级标题'
+      case 2:
+        return '三级标题'
+      case 3:
+        return '四级标题'
+      case 4:
+        return '五级标题'
+      case 5:
+        return '正文'
+    }
+  } else {
+    switch (index) {
+      case 0:
+        return '大标题'
+      case 1:
+        return '中标题'
+      case 2:
+        return '小标题'
+      case 3:
+        return '正文'
+      case 4:
+        return '辅助说明'
+      case 5:
+        return '备注'
     }
   }
+})
+
+initStyle()
+
+function initStyle() {
+  if (props.options[props.styleKey].textHtmlPosit !== undefined || props.options[props.styleKey].textHtmlPosit !== null) {
+    if (props.options[props.styleKey].textHtmlPosit === '') {
+      activeLeftPosit.value = false
+      activeCenterPosit.value = false
+      activeRightPosit.value = false
+    } else if (props.options[props.styleKey].textHtmlPosit === 'left') {
+      activeCenterPosit.value = false
+      activeRightPosit.value = false
+      activeLeftPosit.value = true
+    } else if (props.options[props.styleKey].textHtmlPosit === 'right') {
+      activeCenterPosit.value = false
+      activeRightPosit.value = true
+      activeLeftPosit.value = false
+    } else if (props.options[props.styleKey].textHtmlPosit === 'center') {
+      activeCenterPosit.value = true
+      activeRightPosit.value = false
+      activeLeftPosit.value = false
+    }
+  }
+  if (props.options[props.styleKey].textHtmlBlod !== undefined || props.options[props.styleKey].textHtmlBlod !== null) {
+    if (props.options[props.styleKey].textHtmlBlod === '') {
+      activeTextHtmlBlod.value = false
+    } else {
+      activeTextHtmlBlod.value = true
+    }
+  }
+  if (props.options[props.styleKey].textHtmlTilt !== undefined || props.options[props.styleKey].textHtmlTilt !== null) {
+    if (props.options[props.styleKey].textHtmlTilt === '') {
+      activeTextHtmlTilt.value = false
+    } else {
+      activeTextHtmlTilt.value = true
+    }
+  }
+  if (props.options[props.styleKey].textHtmlUnder !== undefined || props.options[props.styleKey].textHtmlUnder !== null) {
+    if (props.options[props.styleKey].textHtmlUnder === '') {
+      activeTextHtmlUnder.value = false
+    } else {
+      activeTextHtmlUnder.value = true
+    }
+  }
+}
+
+function selectTextStyle(style: any) {
+  if (style.fontWeight == 'bold') {
+    props.options[props.styleKey].textHtmlBlod = 'bold'
+    activeTextHtmlBlod.value = true
+  } else {
+    props.options[props.styleKey].textHtmlBlod = ''
+    activeTextHtmlBlod.value = false
+  }
+  if (store.deviceType === 'pc') {
+    props.options.fontSizeType = style.type
+  } else {
+    props.options[props.styleKey].textHtmlSize = style.fontSize
+  }
+
+  props.options[props.styleKey].textColor = style.color
+}
+
+function selectChangeStyle(value: any, type: string) {
+  if (type === 'size') {
+    props.options.fontSizeType = undefined
+    props.options[props.styleKey].textHtmlSize = value
+  } else if (type === 'left') {
+    activeCenterPosit.value = false
+    activeRightPosit.value = false
+    if (props.options[props.styleKey].textHtmlPosit !== 'left') {
+      props.options[props.styleKey].textHtmlPosit = 'left'
+      activeLeftPosit.value = true
+    } else {
+      props.options[props.styleKey].textHtmlPosit = ''
+      activeLeftPosit.value = false
+    }
+  } else if (type === 'center') {
+    activeLeftPosit.value = false
+    activeRightPosit.value = false
+    if (props.options[props.styleKey].textHtmlPosit !== 'center') {
+      props.options[props.styleKey].textHtmlPosit = 'center'
+      activeCenterPosit.value = true
+    } else {
+      props.options[props.styleKey].textHtmlPosit = ''
+      activeCenterPosit.value = false
+    }
+  } else if (type === 'right') {
+    activeLeftPosit.value = false
+    activeCenterPosit.value = false
+    if (props.options[props.styleKey].textHtmlPosit !== 'right') {
+      props.options[props.styleKey].textHtmlPosit = 'right'
+      activeRightPosit.value = true
+    } else {
+      props.options[props.styleKey].textHtmlPosit = ''
+      activeRightPosit.value = false
+    }
+  } else if (type === 'blod') {
+    if (props.options[props.styleKey].textHtmlBlod) {
+      props.options[props.styleKey].textHtmlBlod = ''
+      activeTextHtmlBlod.value = false
+    } else {
+      props.options[props.styleKey].textHtmlBlod = 'bold'
+      activeTextHtmlBlod.value = true
+    }
+  } else if (type === 'xieti') {
+    if (props.options[props.styleKey].textHtmlTilt) {
+      props.options[props.styleKey].textHtmlTilt = ''
+      activeTextHtmlTilt.value = false
+    } else {
+      props.options[props.styleKey].textHtmlTilt = 'italic'
+      // props.options[props.styleKey].textHtmlTilt = 'oblique' //强制斜体
+      activeTextHtmlTilt.value = true
+    }
+  } else if (type === 'under') {
+    if (props.options[props.styleKey].textHtmlUnder) {
+      props.options[props.styleKey].textHtmlUnder = ''
+      activeTextHtmlUnder.value = false
+    } else {
+      props.options[props.styleKey].textHtmlUnder = 'underline'
+      activeTextHtmlUnder.value = true
+    }
+  }
+}
+
+function changeBGColor(color: any) {
+  showBGColorPicker.value = false
+  props.options[props.styleKey].textBgColor = color
+}
+function changeColor(color: any) {
+  showColorPicker.value = false
+  props.options[props.styleKey].textColor = color
 }
 </script>
 

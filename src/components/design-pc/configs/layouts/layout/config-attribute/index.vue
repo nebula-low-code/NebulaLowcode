@@ -39,7 +39,7 @@ import { useDataStore } from '@/stores'
 import GridLayoutConfig from './grid-layout.vue'
 import ColumnConfig from '@/components/common-attribute-config/column-config.vue'
 import RadioButton from '@/components/common-attribute-config/radio-button.vue'
-
+import ConfigBGStyle from '@/layouts/designer-aside-right/config-basics/config-bg-style.vue'
 
 const store = useDataStore()
 

@@ -22,10 +22,7 @@ export default {
   computed: {
     chartWidth() {
       {
-        const margin =
-          this.options.commonConfig.leftSpaceDistance +
-          this.options.commonConfig.rightSpaceDistance +
-          'px'
+        const margin = this.options.commonConfig.leftSpaceDistance + this.options.commonConfig.rightSpaceDistance + 'px'
         let width = this.options.commonConfigCompWidth + this.options.commonConfigCompWidthUnit
         if (this.options.commonConfigCompWidthUnit == 'auto') {
           return `calc(100% - ${margin})`
@@ -104,6 +101,10 @@ export default {
             name: item,
             type: 'line',
             smooth: true,
+            label: {
+              show: !options.label || options.label === 'none' ? false : true,
+              position: options.label
+            },
             data: sList
           } as any
           if (stack.includes(item)) {

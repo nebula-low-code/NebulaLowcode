@@ -3,23 +3,12 @@
     <a-form labelAlign="right" :label-col="{ span: 6 }" :colon="false" autocomplete="off">
       <a-form-item label="文本内容">
         <a-textarea v-model:value="options.value" />
-        <a-popover v-model:open="visible" placement="bottom" trigger="click">
-          <template #content>
-            <div class="row">
-              <div class="title">中文</div>
-              <a-input v-model:value="options.value" placeholder="请输入中文"></a-input>
-            </div>
-            <div class="row" style="margin-top: 16px">
-              <div class="title">英文</div>
-              <a-input v-model:value="options.enValue" placeholder="请输入英文"></a-input>
-            </div>
-            <a-button @click="visible = false" type="primary" class="confirm-button">确定</a-button>
-          </template>
-          <i :style="style" style="cursor: pointer" class="iconfont iconglobal global"></i>
-        </a-popover>
+      </a-form-item>
+      <a-form-item label="富文本">
+        <a-switch v-model:checked="options.richText" />
       </a-form-item>
       <a-form-item>
-        <TextStyleEditor :style-editor-config="options.styleEditorConfig"></TextStyleEditor>
+        <TextStyleEditor :options="options"></TextStyleEditor>
       </a-form-item>
       <a-form-item label="文本格式">
         <a-select v-model:value="options.textFormat">
@@ -30,6 +19,12 @@
       </a-form-item>
       <a-form-item label="关闭换行">
         <a-switch v-model:checked="options.nowrap" />
+      </a-form-item>
+      <a-form-item label="渲染器" v-if="options._data_origin_component_uuid">
+        <div class="event-div-col" @click="onEventClick">
+          <i class="event-icon iconfont iconbiangengguanli" />
+          渲染器
+        </div>
       </a-form-item>
     </a-form>
   </div>
@@ -43,18 +38,10 @@ import { formatTypeList } from '@/utils/text-formatter'
 
 const store = useDataStore()
 const options = computed(() => store.currentCheckedComponent.options)
-const style = computed(() => {
-  const hasI18N = options.value.value != null && options.value.value.length > 0 && options.value.enValue != null && options.value.enValue.length > 0
-  if (hasI18N) {
-    return {
-      backgroundColor: '#1677ff',
-      color: 'white'
-    }
-  } else {
-    return {}
-  }
-})
-const visible = ref<boolean>(false)
+
+function onEventClick() {
+  store.openStatusDialog()
+}
 </script>
 
 <style scoped>
@@ -79,5 +66,26 @@ const visible = ref<boolean>(false)
 .confirm-button {
   width: 100%;
   margin-top: 16px;
+}
+
+.event-div-col {
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
+  width: 44%;
+  align-items: center;
+  color: #666;
+  border: 1px solid #e5e6e8;
+  border-radius: 6px;
+  padding: 0 8px;
+  height: 36px;
+  &:hover {
+    color: #409eff;
+    border: 1px dashed #409eff;
+  }
+}
+
+.event-icon {
+  margin-right: 10px;
 }
 </style>

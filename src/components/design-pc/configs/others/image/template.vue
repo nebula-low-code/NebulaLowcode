@@ -1,8 +1,11 @@
 <template>
   <div v-if="isMultiPic" style="display: flex">
-    <img v-for="(item, index) in extraData.columns" :src="item" :style="style" style="margin-right: 4px" />
+    <img v-show="item && item.length > 0" v-for="(item, index) in extraData.columns" :src="item" :style="style" style="margin-right: 4px" />
   </div>
-  <img v-else :src="imageUrl" :style="style" />
+  <template v-else>
+    <img v-if="imageUrl && imageUrl.length > 0" :src="imageUrl" :style="style" />
+    <div v-else style="height: 20px"></div>
+  </template>
 </template>
 <script lang="ts">
 import optionsConfig from './options-config'

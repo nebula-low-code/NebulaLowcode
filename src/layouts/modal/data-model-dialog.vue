@@ -14,56 +14,60 @@
       <a-form-item label="文件名称" name="menuName">
         <a-input style="width: 200px" v-model:value="crudForm.menuName" placeholder="文件名称"></a-input>
       </a-form-item>
+      <a-form-item label="" name="" class="curd-form-item">
+        <a-button type="primary" @click="translate">AI优化</a-button>
+      </a-form-item>
     </a-form>
-
-    <a-table :dataSource="tableData" :columns="columns" style="width: 100%" max-height="400">
-      <template #bodyCell="{ column, record, index }">
-        <template v-if="column.key === 'title'">
-          <a-input v-model:value="record.colTitle" />
+    <a-spin :spinning="spinning" tip="AI优化中...">
+      <a-table :dataSource="tableData" :columns="columns" style="width: 100%" :pagination="false" max-height="400" :scroll="{ y: 400 }">
+        <template #bodyCell="{ column, record, index }">
+          <template v-if="column.key === 'title'">
+            <a-input v-model:value="record.colTitle" />
+          </template>
+          <template v-else-if="column.key === 'componentType'">
+            <a-select v-model:value="record.editType" style="width: 150px; margin-right: 10px">
+              <a-select-option v-for="(eItem, eKey) in editTypeList" :value="eItem.value" :key="eKey">
+                {{ eItem.label }}
+              </a-select-option>
+            </a-select>
+          </template>
+          <template v-else-if="column.key === 'columnName'">
+            <a-input v-model:value="record.columnName" />
+          </template>
+          <template v-else-if="column.key === 'dataType'">
+            <a-input placeholder="请输入长度" v-model:value="record.precision" v-if="floatTypeMap.indexOf(record.dataType) === -1">
+              <template #addonBefore>
+                <a-select v-model:value="record.dataType" placeholder="请选择" style="width: 120px">
+                  <a-select-option :value="typeItem" v-for="(typeItem, key) in fieldDataTypeMap" :key="key">
+                    {{ typeItem }}
+                  </a-select-option>
+                </a-select>
+              </template>
+            </a-input>
+            <a-input placeholder="请输入小数长度" v-model:value="record.scale" v-else>
+              <template #addonBefore>
+                <a-select v-model:value="record.dataType" placeholder="请选择" style="width: 120px">
+                  <a-select-option :value="typeItem" v-for="(typeItem, key) in fieldDataTypeMap" :key="key">
+                    {{ typeItem }}
+                  </a-select-option>
+                </a-select>
+              </template>
+            </a-input>
+          </template>
+          <template v-else-if="column.key === 'isTableCol'">
+            <a-checkbox v-model:checked="record.isTableCol" />
+          </template>
         </template>
-        <template v-else-if="column.key === 'componentType'">
-          <a-select v-model:value="record.editType" style="width: 150px; margin-right: 10px">
-            <a-select-option v-for="(eItem, eKey) in editTypeList" :value="eItem.value" :key="eKey">
-              {{ eItem.label }}
-            </a-select-option>
-          </a-select>
-        </template>
-        <template v-else-if="column.key === 'columnName'">
-          <a-input v-model:value="record.columnName" />
-        </template>
-        <template v-else-if="column.key === 'dataType'">
-          <a-input placeholder="请输入长度" v-model:value="record.precision" v-if="floatTypeMap.indexOf(record.dataType) === -1">
-            <template #addonBefore>
-              <a-select v-model:value="record.dataType" placeholder="请选择" style="width: 120px">
-                <a-select-option :value="typeItem" v-for="(typeItem, key) in fieldDataTypeMap" :key="key">
-                  {{ typeItem }}
-                </a-select-option>
-              </a-select>
-            </template>
-          </a-input>
-          <a-input placeholder="请输入小数长度" v-model:value="record.scale" v-else>
-            <template #addonBefore>
-              <a-select v-model:value="record.dataType" placeholder="请选择" style="width: 120px">
-                <a-select-option :value="typeItem" v-for="(typeItem, key) in fieldDataTypeMap" :key="key">
-                  {{ typeItem }}
-                </a-select-option>
-              </a-select>
-            </template>
-          </a-input>
-        </template>
-        <template v-else-if="column.key === 'isTableCol'">
-          <a-checkbox v-model:checked="record.isTableCol" />
-        </template>
-      </template>
-    </a-table>
+      </a-table>
+    </a-spin>
   </a-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { crudByModelService } from '@/api/api'
-import { getDbSrclist } from '@/api/api'
-import { addDbTable } from '@/api/api'
+import { getFieldTranslateBatch } from '@/api/data-model'
+import { addDbTable, getDbSrclist } from '@/api/db'
 import { useDataStore } from '@/stores'
 import { message } from 'ant-design-vue'
 
@@ -72,6 +76,7 @@ const isShowDialog = ref(false)
 let isSaving = false
 const dbList = ref<any[]>([])
 const formRef = ref()
+const spinning = ref<boolean>(false)
 const crudForm = reactive({
   dbConfigId: null,
   tableName: '',
@@ -82,11 +87,11 @@ const crudForm = reactive({
 const fieldDataTypeMap = [
   'VARCHAR', // 字符型
   'INT', // 整数型
+  'BIGINT', // 整数型
   'FLOAT',
   'DOUBLE', // 浮点型
+  'DECIMAL',
   'DATE',
-  'TIME',
-  'YEAR',
   'DATETIME' // 日期型
 ]
 const floatTypeMap = ['FLOAT', 'DOUBLE', 'DECIMAL']
@@ -121,7 +126,8 @@ const columns = [
   {
     title: '表格列',
     dataIndex: 'isTableCol',
-    key: 'isTableCol'
+    key: 'isTableCol',
+    width: 100
   }
 ]
 
@@ -139,11 +145,11 @@ const editTypeList = [
     value: 'select'
   },
   {
-    label: '单选',
+    label: '单选框',
     value: 'radio'
   },
   {
-    label: '多选',
+    label: '多选框',
     value: 'checkbox'
   }
 ]
@@ -173,10 +179,10 @@ function save() {
   }
   let needColName = false
   tableData.value.forEach((tItem) => {
-    if (!tItem.columnName) {
+    if (!tItem.colName) {
       needColName = true
     }
-    setNameByComponentByUuid(tItem.uuid, tItem.columnName, tItem.colTitle)
+    setNameByComponentByUuid(tItem.uuid, tItem.colName, tItem.colTitle)
   })
   if (needColName) {
     message.error('列名必填')
@@ -221,7 +227,7 @@ function generateCrud() {
     columnName: crudForm.tablePrimaryKey,
     colType: 'int(11)',
     colTitle: crudForm.tablePrimaryKey,
-    isTableCol: true,
+    isTableCol: false,
     isSelect: false,
     isEditable: false,
     editType: 'text',
@@ -253,26 +259,31 @@ function generateCrud() {
 function dialogOpen() {
   isShowDialog.value = true
   tableData.value = []
-  store.inputComponentList.forEach((cItem: any, cIndex) => {
-    let eType = ''
-    editTypeList.forEach((item) => {
-      if (item.label == cItem.name) {
-        eType = item.value
-      }
-    })
-    tableData.value.push({
-      colTitle: cItem.options.label,
-      columnName: cItem.options.commonConfigAssignName,
-      colName: cItem.options.commonConfigAssignName,
-      uuid: cItem.uuid,
-      editType: eType,
-      dataType: 'VARCHAR',
-      precision: 100,
-      isSelect: true,
-      isEditable: true,
-      isCheck: cItem.options.required
-    })
+  store.allInputComponentList.forEach((cItem: any, cIndex) => {
+    if (cItem.type != 'van-design-text') {
+      let eType = ''
+      editTypeList.forEach((item) => {
+        if (item.label == cItem.name) {
+          eType = item.value
+        }
+      })
+      tableData.value.push({
+        colTitle: cItem.options.label,
+        colName: cItem.options.commonConfigAssignName,
+        columnName: cItem.options.commonConfigAssignName,
+        uuid: cItem.uuid,
+        editType: eType,
+        dataType: 'VARCHAR',
+        precision: 100,
+        isSelect: true,
+        isTableCol: false,
+        isEditable: true,
+        isCheck: cItem.options.required
+      })
+    }
   })
+
+  // 这里直接调用AI
 
   initDb()
 }
@@ -282,6 +293,37 @@ function setNameByComponentByUuid(uuid: string, name: string, label: string) {
     comp.options.commonConfigAssignName = name
     comp.options.label = label
   }
+}
+
+function translate() {
+  spinning.value = true
+  const newArray = tableData.value.map(({ uuid, columnName, editType, isSelect, isEditable, isCheck, ...rest }) => rest)
+  let params = {
+    fieldList: newArray
+  }
+  getFieldTranslateBatch(params)
+    .then((res) => {
+      console.log('translateres=', res)
+      let tempList = res.dataList
+
+      tableData.value.forEach((item, index) => {
+        item.colName = tempList[index].colName
+        item.columnName = tempList[index].colName
+        item.dataType = tempList[index].dataType
+        item.precision = tempList[index].precision
+        item.scale = tempList[index].scale
+
+        item.isSelect = true
+        item.isTableCol = tempList[index].isTableCol
+        item.isEditable = true
+        item.isCheck = false
+      })
+
+      spinning.value = false
+    })
+    .catch(() => {
+      spinning.value = false
+    })
 }
 
 defineExpose({

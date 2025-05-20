@@ -10,9 +10,23 @@
       <a-form-item label="行号开关">
         <a-switch v-model:checked="options.rowIndexSwitch" />
       </a-form-item>
-      <a-form-item label="升级">
-        <a-button type="primary" @click="upgrade">一键升级</a-button>
+      <a-form-item label="列设置">
+        <a-switch v-model:checked="options.columnSetSwitch" />
       </a-form-item>
+      <a-form-item label="可伸缩列">
+        <div style="display: flex; align-items: center">
+          <a-switch v-model:checked="options.resizableSwitch" />
+          <a-tooltip>
+            <template #title>
+              <span>当表格列数较多导致出现横向滚动条时，启用可伸缩列功能可让用户自主拖动调整列宽，优化数据浏览体验。</span>
+            </template>
+            <QuestionCircleOutlined style="margin-left: 5px" />
+          </a-tooltip>
+        </div>
+      </a-form-item>
+      <!-- <a-form-item label="升级">
+        <a-button type="primary" @click="upgrade">一键升级</a-button>
+      </a-form-item> -->
     </a-form>
   </div>
 </template>
@@ -21,12 +35,13 @@
 import { ref, computed } from 'vue'
 import { useDataStore } from '@/stores'
 import { Modal, message } from 'ant-design-vue'
+import { QuestionCircleOutlined } from '@ant-design/icons-vue'
 const store = useDataStore()
 const options = computed(() => store.currentCheckedComponent.options)
 function upgrade() {
   Modal.confirm({
     title: '一键升级',
-    content: '一键升级为新编辑器表格数据格式，主要解决表格在老编辑环境下体积过大问题，同时处理表格列校验逻辑,该操作不可能，升级后不能进行回退',
+    content: '一键升级为新编辑器表格数据格式，主要解决表格在老编辑环境下体积过大问题，同时处理表格列校验逻辑,该操作不可逆，升级后不能进行回退',
     okText: '确认',
     cancelText: '取消',
     onOk() {
@@ -55,12 +70,12 @@ function upgradeTable() {
         }
       }
     })
-    if(element.children&&element.children.length>0){
-        element.children.forEach((child)=>{
-            child.width='200'
-            child.colIndex=index
-            child.align='center'
-        })
+    if (element.children && element.children.length > 0) {
+      element.children.forEach((child) => {
+        child.width = '200'
+        child.colIndex = index
+        child.align = 'center'
+      })
     }
     if (!existFlag) {
       let tempItem = [
@@ -75,8 +90,8 @@ function upgradeTable() {
       ]
       tempSpecialList.push(tempItem)
     }
-    
-    handleStatus(element,tempSpecialList)
+
+    handleStatus(element, tempSpecialList)
     delete element.componentList
     delete element.interfaceDataConfig
     delete element.specialColumnsConfigs
@@ -89,7 +104,7 @@ function upgradeTable() {
   options.value.version = '2.0.0'
 }
 
-function handleStatus(columnItem: any,tempSpecialList:any) {
+function handleStatus(columnItem: any, tempSpecialList: any) {
   if (columnItem.dataIndex !== '操作') {
     let statusEventList = columnItem.statusEventList
     statusEventList &&
@@ -110,7 +125,7 @@ function handleStatus(columnItem: any,tempSpecialList:any) {
   } else {
     let componentList = columnItem.componentList
     componentList &&
-      componentList.forEach((colItem: any,index:number) => {
+      componentList.forEach((colItem: any, index: number) => {
         let _statusEventList = colItem._statusEventList
         _statusEventList &&
           _statusEventList.forEach((sItem: any) => {
@@ -123,9 +138,9 @@ function handleStatus(columnItem: any,tempSpecialList:any) {
               sItem.properties._statusOperateSetTextOfDynamicValue = colItem._statusOperateSetTextOfDynamicValue
             }
           })
-          let lastSpecial=tempSpecialList[tempSpecialList.length-1]
-          lastSpecial[index].statusEventList = _statusEventList
-          lastSpecial[index].version='2.0.0'
+        let lastSpecial = tempSpecialList[tempSpecialList.length - 1]
+        lastSpecial[index].statusEventList = _statusEventList
+        lastSpecial[index].version = '2.0.0'
       })
   }
 }

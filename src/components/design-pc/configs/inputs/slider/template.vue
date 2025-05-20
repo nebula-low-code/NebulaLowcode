@@ -5,7 +5,7 @@
         display: options.labelShow ? '' : 'none',
         width: options.labelAlign == 'top' ? '100%' : options.width + 'px',
         textAlign: options.labelAlign == 'top' ? 'left' : options.labelAlign as 'left' | 'center' | 'right',
-        lineHeight: options.size == 'large' ? '40px' : options.size == 'small' ? '24px' : '32px'
+        lineHeight: options.size == 'large' ? '40px' : '32px'
       }"
     >
       {{ options.label }}
@@ -18,15 +18,7 @@
         display: 'inline-block'
       }"
     >
-      <a-slider
-        v-model:value="options.value"
-        :step="options.step"
-        :vertical="options.vertical"
-        :min="options.min"
-        :max="options.max"
-        :default-value="options.value"
-        :disabled="options.disabled"
-      />
+      <a-slider v-model:value="options.value" :step="options.step" :vertical="options.vertical" :min="options.min" :max="options.max" :default-value="options.value" :disabled="options.disabled" />
     </div>
   </div>
 </template>

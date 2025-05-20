@@ -37,6 +37,4 @@ const sizeOptions = [
 const options = computed(() => store.currentCheckedComponent.options)
 </script>
 
-<stylescoped>
-
-</stylescoped>
+<style scoped></style>

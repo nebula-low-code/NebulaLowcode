@@ -6,20 +6,22 @@
         width: options.labelAlign == 'top' ? '100%' : options.width + 'px',
         display: options.labelShow ? '' : 'none',
         textAlign: options.labelAlign == 'top' ? 'left' : options.labelAlign as 'left' | 'center' | 'right',
-        lineHeight: options.size == 'large' ? '40px' : options.size == 'small' ? '24px' : '32px'
+        lineHeight: options.size == 'large' ? '40px' : '32px'
       }"
     >
       {{ options.label }}
     </label>
-    <div style="flex: 1">
+    <div style="flex: 1; min-width: 0">
       <a-tree-select
         style="width: 100%"
+        :tree-default-expand-all="options.expandAll"
         :multiple="options.multiple"
         :tree-data="optionsData"
         :placeholder="options.placeholder"
         :size="options.size"
         :allowClear="options.clearable"
         :disabled="options.disabled"
+        :style="disableStyle"
         :field-names="{ label: options.setOptions.name, value: options.setOptions.value, children: options.setOptions.childrenId }"
       />
     </div>
@@ -39,6 +41,14 @@ export default {
     }
   },
   computed: {
+    disableStyle() {
+      if (this.options.disabled) {
+        return {
+          pointerEvents: 'none'
+        }
+      }
+      return {}
+    },
     flexStyle() {
       if (this.options.labelAlign != 'top') {
         return {

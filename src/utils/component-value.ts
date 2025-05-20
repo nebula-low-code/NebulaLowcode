@@ -1,17 +1,26 @@
 import { useDataStore } from '@/stores'
 import { DataSourceType, WorkflowOutputs } from '@/utils/constants'
-import { type componentOptionsType } from '@/utils/type'
+import { isEmpty } from 'lodash'
+import { isNetworkDatasource } from './string-utils'
+//组件的输出值
 export function getComponentValue(options: any, defaultValue: any, bindComponentUUID?: string) {
   const store = useDataStore()
   let dataSource = options.contentDataSource
   let dataConfig = options.interfaceDataConfig
   let value = ''
-  if (dataSource === DataSourceType.INTERFACE) {
+  if (isNetworkDatasource(dataSource)) {
     //绑定接口
     let id = dataConfig.uuid || dataConfig.id //兼容旧的配置,有些接口没有uuid
     let resp = store.interfaceDataById(id)
-    if (resp) {
-      value = resp.data.responseData[dataConfig.key]
+    if (resp && resp.data) {
+      if (isEmpty(dataConfig.middle)) {
+        value = resp.data.responseData[dataConfig.key]
+      } else {
+        let middle = resp.data.responseData[dataConfig.middle]
+        if (!isEmpty(middle)) {
+          value = middle[dataConfig.key]
+        }
+      }
     }
   } else if (dataSource === DataSourceType.COMPONENT) {
     //绑定组件
@@ -92,17 +101,25 @@ export function getComponentValue(options: any, defaultValue: any, bindComponent
   return value
 }
 
+//组件的回显值
 export function getComponentEchoValue(options: any, defaultValue: any, bindComponentUUID?: string) {
   const store = useDataStore()
   let dataSource = options.contentDataEcho
   let dataConfig = options.interfaceDataEchoConfig
   let value = ''
-  if (dataSource === DataSourceType.INTERFACE || dataSource === DataSourceType.CONNECT) {
+  if (isNetworkDatasource(dataSource)) {
     //绑定接口
     let id = dataConfig.uuid || dataConfig.id //兼容旧的配置,有些接口没有uuid
     let resp = store.interfaceDataById(id)
-    if (resp) {
-      value = resp.data.responseData[dataConfig.key]
+    if (resp && resp.data) {
+      if (isEmpty(dataConfig.middle)) {
+        value = resp.data.responseData[dataConfig.key]
+      } else {
+        let middle = resp.data.responseData[dataConfig.middle]
+        if (!isEmpty(middle)) {
+          value = middle[dataConfig.key]
+        }
+      }
     }
   } else if (dataSource === DataSourceType.COMPONENT) {
     //绑定组件
@@ -140,4 +157,15 @@ export function getComponentEchoValue(options: any, defaultValue: any, bindCompo
     value = defaultValue
   }
   return value
+}
+
+//组件绑定的数据
+export function getComponentData(uuid: string, comp: any) {
+  const store = useDataStore()
+  let data = undefined
+  let res = store.interfaceDataById(uuid)
+  if (res && res.data && res.data.responseData) {
+    data = res.data.responseData[comp.options.interfaceDataConfig.key]
+  }
+  return data
 }

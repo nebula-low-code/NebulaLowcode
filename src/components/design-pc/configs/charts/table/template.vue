@@ -1,23 +1,24 @@
 <template>
-  <a-table
-    :columns="filterColumn"
-    :dataSource="tableData"
-    :pagination="pagination"
-    :row-selection="
-      options.rowSelectKey
-        ? {
-            selectedRowKeys: options.selectedRowKeys,
-            preserveSelectedRowKeys: true,
-            onChange: onSelectChange
-          }
-        : null
-    "
-    :rowKey="(record:any) => record[options.rowSelectKey]"
-    bordered
-    size="middle"
-    :scroll="{ x: 'max-content', y: tableHeight }"
-  >
-    <template #customFilterDropdown="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }">
+  <div :class="options.elUUID" style="word-break: break-all">
+    <a-table
+      :columns="filterColumn"
+      :dataSource="tableData"
+      :pagination="pagination"
+      :row-selection="
+        options.rowSelectKey
+          ? {
+              selectedRowKeys: options.selectedRowKeys,
+              preserveSelectedRowKeys: true,
+              onChange: onSelectChange
+            }
+          : null
+      "
+      :rowKey="(record:any) => record[options.rowSelectKey]"
+      bordered
+      size="middle"
+      :scroll="{ x: 'max-content', y: tableHeight }"
+    >
+      <!-- <template #customFilterDropdown="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }">
       <CustomColumns
         type="original"
         :uuid="options.commonConfigAssignSign"
@@ -32,74 +33,104 @@
 
     <template #customFilterIcon="{ filtered, column }">
       <SettingOutlined v-if="column.dataIndex == '_980355088_'" />
-    </template>
-    <template #bodyCell="{ column, record }">
-      <div class="table-cell" v-if="column.dataIndex !== '_980355088_'" v-for="(item, key) in options.specialColumnsConfigs" :key="key">
-        <span v-for="(actionItem, actionKey) in item" :key="actionKey">
-          <!-- (key === column.colIndex||item.parentIndex==column.colIndex) 这块的处理逻辑是，1 防止一个表中重复配置相同字段，2 子列处理，-->
-          <span v-if="actionItem.valueType === 'value' && column.dataIndex === actionItem.dataIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
-            <CustomCell v-if="record" :rowData="record" :isOperate="false" :actionItem="actionItem" :columnItem="column" />
-            <a-divider type="vertical" v-if="actionKey < item.length - 1 && onHandleStatusConfigRender(record, actionItem, actionItem.colValue, column) !== '<span></span>'" />
-          </span>
-          <span v-else-if="actionItem.valueType === 'text' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
-            <CustomCell v-if="record" :rowData="record" :actionItem="actionItem" :defaultValue="actionItem.colValue" :columnItem="column" :isOperate="true" />
-            <a-divider type="vertical" v-if="actionKey < item.length - 1 && onHandleStatusConfigRender(record, actionItem, actionItem.colValue, column) !== '<span></span>'" />
-          </span>
-          <span v-else-if="actionItem.valueType === 'file' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
-            <!-- 文件特殊处理 ，图片，word pdf等 -->
-            <span v-if="record[actionItem.colValue]">
-              <span v-for="(fileItem, fileIndex) in JSON.parse(record[actionItem.colValue])" :key="'file' + fileIndex" @click="downloadFile(fileItem)">
-                <a-tooltip placement="bottom" effect="light" color="#fff">
-                  <template #title>
-                    <span style="color: #000">名称：{{ fileItem.fileName }}<br />{{ filterType(fileItem.size) }}</span>
-                    <span class="download-span" @click="downloadFile(fileItem)">下载</span>
-                  </template>
-                  <img v-if="fileItem.type.indexOf('image') != -1" class="file-img" :src="fileItem.url" />
-                  <!-- text -->
-                  <img v-else-if="fileItem.type.indexOf('image') != -1" class="file-img" :src="textUrl" />
-                  <!-- pdf -->
-                  <img v-else-if="fileItem.type.indexOf('pdf') != -1" class="file-img" :src="pdfUrl" />
-                  <!-- ppt -->
-                  <img v-else-if="fileItem.type.indexOf('presentation') != -1 || fileItem.type.indexOf('powerpoint') != -1" class="file-img" :src="pptUrl" />
-                  <!-- rar -->
-                  <img v-else-if="fileItem.type.indexOf('rar') != -1" class="file-img" :src="zipUrl" />
-                  <!-- word -->
-                  <img v-else-if="fileItem.type.indexOf('document') != -1 || fileItem.type.indexOf('word') != -1" class="file-img" :src="wordUrl" />
-                  <!-- excel -->
-                  <img v-else-if="fileItem.type.indexOf('excel') != -1 || fileItem.type.indexOf('sheet') != -1" class="file-img" :src="excelUrl" />
-                  <!-- else 文件doc -->
-                  <img v-else class="file-img" :src="docUrl" />
-                </a-tooltip>
+    </template> -->
+      <template #bodyCell="{ column, record }">
+        <div class="table-cell" v-if="column.dataIndex !== '_980355088_'" v-for="(item, key) in options.specialColumnsConfigs" :key="key">
+          <span v-for="(actionItem, actionKey) in item" :key="actionKey">
+            <!-- (key === column.colIndex||item.parentIndex==column.colIndex) 这块的处理逻辑是，1 防止一个表中重复配置相同字段，2 子列处理，-->
+            <span v-if="actionItem.valueType === 'value' && column.dataIndex === actionItem.dataIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
+              <CustomCell v-if="record" :rowData="record" :isOperate="false" :actionItem="actionItem" :columnItem="column" />
+              <a-divider type="vertical" v-if="actionKey < item.length - 1 && onHandleStatusConfigRender(record, actionItem, actionItem.colValue, column) !== '<span></span>'" />
+            </span>
+            <span
+              v-else-if="actionItem.valueType === 'text' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)"
+            >
+              <CustomCell v-if="record" :rowData="record" :actionItem="actionItem" :defaultValue="actionItem.colValue" :columnItem="column" :isOperate="true" />
+              <a-divider type="vertical" v-if="actionKey < item.length - 1 && onHandleStatusConfigRender(record, actionItem, actionItem.colValue, column) !== '<span></span>'" />
+            </span>
+            <span
+              v-else-if="actionItem.valueType === 'file' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)"
+            >
+              <!-- 文件特殊处理 ，图片，word pdf等 -->
+              <span v-if="isFileArray(record[actionItem.colValue])">
+                <span v-for="(fileItem, fileIndex) in JSON.parse(record[actionItem.colValue])" :key="'file' + fileIndex" @click="downloadFile(fileItem)">
+                  <a-tooltip placement="bottom" effect="light" color="#fff">
+                    <template #title>
+                      <span style="color: #000">名称：{{ fileItem.fileName }}<br />{{ filterType(fileItem.size) }}</span>
+                      <span class="download-span" @click="downloadFile(fileItem)">下载</span>
+                    </template>
+                    <img v-if="fileItem.type.indexOf('image') != -1" class="file-img" :src="fileItem.url" />
+                    <!-- text -->
+                    <img v-else-if="fileItem.type.indexOf('image') != -1" class="file-img" :src="textUrl" />
+                    <!-- pdf -->
+                    <img v-else-if="fileItem.type.indexOf('pdf') != -1" class="file-img" :src="pdfUrl" />
+                    <!-- ppt -->
+                    <img v-else-if="fileItem.type.indexOf('presentation') != -1 || fileItem.type.indexOf('powerpoint') != -1" class="file-img" :src="pptUrl" />
+                    <!-- rar -->
+                    <img v-else-if="fileItem.type.indexOf('rar') != -1" class="file-img" :src="zipUrl" />
+                    <!-- word -->
+                    <img v-else-if="fileItem.type.indexOf('document') != -1 || fileItem.type.indexOf('word') != -1" class="file-img" :src="wordUrl" />
+                    <!-- excel -->
+                    <img v-else-if="fileItem.type.indexOf('excel') != -1 || fileItem.type.indexOf('sheet') != -1" class="file-img" :src="excelUrl" />
+                    <!-- else 文件doc -->
+                    <img v-else class="file-img" :src="docUrl" />
+                  </a-tooltip>
+                </span>
               </span>
+              <span v-else>{{ record[actionItem.colValue] }}</span>
             </span>
-            <span v-else></span>
-          </span>
-          <span v-else-if="actionItem.valueType === 'pic' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
-            <!-- 文件特殊处理 ，图片，word pdf等 -->
-            <img class="file-img" :src="record[actionItem.colValue]" />
-          </span>
-          <span
-            v-else-if="actionItem.valueType === 'color' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)"
-          >
-            <span v-if="record[actionItem.colValue].indexOf('#') != -1">
-              <div class="color-div" :style="{ backgroundColor: record[actionItem.colValue] }"></div>
+            <span
+              v-else-if="actionItem.valueType === 'pic' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)"
+            >
+              <!-- 文件特殊处理 ，图片，word pdf等 -->
+              <img class="file-img" :src="record[actionItem.colValue]" />
             </span>
-            <span v-else>
-              <div class="color-div" :style="{ backgroundColor: '#' + record[actionItem.colValue] }"></div>
+            <span
+              v-else-if="actionItem.valueType === 'color' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)"
+            >
+              <span v-if="record[actionItem.colValue].indexOf('#') != -1">
+                <div class="color-div" :style="{ backgroundColor: record[actionItem.colValue] }"></div>
+              </span>
+              <span v-else>
+                <div class="color-div" :style="{ backgroundColor: '#' + record[actionItem.colValue] }"></div>
+              </span>
+              <!-- 文件特殊处理 ，图片，word pdf等 -->
             </span>
-            <!-- 文件特殊处理 ，图片，word pdf等 -->
+            <span
+              v-else-if="actionItem.valueType === 'link' && column.dataIndex === actionItem.dataIndex && key === column.colIndex && (key === column.colIndex || item.parentIndex == column.colIndex)"
+            >
+              <!-- 文件特殊处理 ，图片，word pdf等 -->
+              <a>{{ record[actionItem.colValue] }}</a>
+            </span>
+            <span v-else-if="!actionItem.valueType && column.dataIndex === actionItem.dataIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
+              <span v-if="record">{{ actionItem.colValue }}</span>
+            </span>
+            <span class="table-cell-operation" v-if="actionItem.isEditField && column.dataIndex === actionItem.dataIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
+              <CheckOutlined class="save-icon" v-if="record.editable && actionItem.colValue === record.editCol" @click="onSaveIcon(record, actionItem, record[actionItem.colValue])" />
+              <EditOutlined v-else class="edit-icon" @click="onEditIcon(record, actionItem)" />
+            </span>
           </span>
-          <span v-else-if="!actionItem.valueType && column.dataIndex === actionItem.dataIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
-            <span v-if="record">{{ actionItem.colValue }}</span>
-          </span>
-          <span class="table-cell-operation" v-if="actionItem.isEditField && column.dataIndex === actionItem.dataIndex && (key === column.colIndex || item.parentIndex == column.colIndex)">
-            <CheckOutlined class="save-icon" v-if="record.editable && actionItem.colValue === record.editCol" @click="onSaveIcon(record, actionItem, record[actionItem.colValue])" />
-            <EditOutlined v-else class="edit-icon" @click="onEditIcon(record, actionItem)" />
-          </span>
-        </span>
-      </div>
-    </template>
-  </a-table>
+        </div>
+      </template>
+    </a-table>
+    <div style="position: absolute; margin-top: -40px; cursor: pointer" v-if="options.columnSetSwitch">
+      <a-popover trigger="click">
+        <template #content>
+          <CustomColumns
+            type="original"
+            :uuid="tableUUID"
+            :columnsReference="options.columnsReference"
+            :columsBackups="options.columnsData"
+            :columnByKeyMap="options.columnByKeyMap"
+            @onLoadLocalColumns="onLoadLocalColumns"
+            @onReloadColumns="onReloadColumns"
+            @onResetColumns="onResetColumns"
+          />
+        </template>
+        <SettingOutlined style="margin-right: 5px" />列设置
+      </a-popover>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -110,6 +141,7 @@ import { useDataStore } from '@/stores'
 import CustomCell from './custom-cell/index.vue'
 import CustomColumns from './custom-columns/index.vue'
 import { SettingOutlined, EditOutlined, CheckOutlined } from '@ant-design/icons-vue'
+import { isFileArray } from '@/utils/param-value'
 export default defineComponent({
   name: 'AntdTableTemplate',
   components: { CustomColumns, CustomCell, SettingOutlined, EditOutlined, CheckOutlined },
@@ -119,7 +151,6 @@ export default defineComponent({
     }
   },
   computed: {
-    //     ...mapState(['componentListMap']),
     filterColumn() {
       return this.options.columnsData.length ? this.options.columnsData : this.options.defaultColumnsData
     },
@@ -148,7 +179,7 @@ export default defineComponent({
       if (this.options.interfaceDataConfig.uuid) {
         let resp = this.interfaceDataById(this.options.interfaceDataConfig.uuid)
         interfaceTableData = []
-        if (resp) {
+        if (resp && resp.data.responseData) {
           interfaceTableData = resp.data.responseData[this.options.interfaceDataConfig.key]
           //   interfaceTableData = resp[this.options.interfaceDataConfig.key]
           if (this.options.pagingTotalKey) {
@@ -195,6 +226,7 @@ export default defineComponent({
   },
   methods: {
     ...mapActions(useDataStore, ['interfaceDataById']),
+    isFileArray,
     handleColumnsConfigList(vals: any) {
       this.options.columnsData = []
       let language = navigator.language.substr(0, 2)
@@ -202,9 +234,18 @@ export default defineComponent({
       vals &&
         vals.forEach((item: any, index: any) => {
           let columnItem = JSON.parse(JSON.stringify(item)) || {}
+          if (this.options.leftFixedIndex) {
+            if (index < this.options.leftFixedIndex) {
+              columnItem.fixed = 'left'
+            }
+          }
           if (columnItem.dataIndex == '操作') {
             if (columnItem.isRightFixed) {
-              columnItem.width = 0
+              if (columnItem.isFixedWidth) {
+                columnItem.width = columnItem.operatorWidth
+              } else {
+                columnItem.width = 0
+              }
               columnItem.fixed = 'right'
               if (!columnItem.operatorWidth) {
                 columnItem.operatorWidth = 100
@@ -226,7 +267,7 @@ export default defineComponent({
           columnItem.dataIndex = item.dataIndex || ''
           columnItem.key = item.key || item.value
           columnItem.colAlign = item.align || 'center'
-          columnItem.align =  'center'
+          columnItem.align = 'center'
           columnItem.colValueType = item.colValueType || 'single-row'
           columnItem.colIndex = index
           // columnItem.specialColumnsConfigs = this.options.specialColumnsConfigs
@@ -275,14 +316,14 @@ export default defineComponent({
             titleValue = item.enValue || item.title
           }
           let obj = {
-            name: titleValue ,
+            name: titleValue,
             dataIndex: item.dataIndex,
             key: item.dataIndex,
             colValue: item.dataIndex,
             parentIndex: columnItem.colIndex,
             valueType: 'value'
           }
-        //   this.options.specialColumnsConfigs.push([obj])
+          //   this.options.specialColumnsConfigs.push([obj])
         })
       }
     },
@@ -336,19 +377,23 @@ export default defineComponent({
     handleRowIndexSwitch(val: any) {
       if (val) {
         if (this.options.columnsData[0].dataIndex === '_980355088_') return false
-
-        this.options.columnsData.unshift({
+        let rowIndex = {
           title: '序号',
           dataIndex: '_980355088_',
           width: 80,
           key: '_980355088_',
           align: 'center',
-          customFilterDropdown: true,
+          //   customFilterDropdown: true,
+          //   fixed:'left',
           customRender: (text: any) => {
             const startIndex = (Math.max(this.options.pagination.current || 1, 1) - 1) * this.options.pagination.pageSize
             return text.index + 1 + startIndex
           }
-        })
+        }
+        if (this.options.leftFixedIndex) {
+          rowIndex.fixed = 'left'
+        }
+        this.options.columnsData.unshift(rowIndex)
       } else {
         if (this.options.columnsData[0] && this.options.columnsData[0].dataIndex === '_980355088_') {
           this.options.columnsData.shift()

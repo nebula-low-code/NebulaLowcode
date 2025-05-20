@@ -10,9 +10,10 @@ export default {
     id: '',
     key: ''
   },
-  interfaceDataEchoConfig: {
-    versions: '1.0.0',
-    uuid: '',
-    id: ''
-  }
+  columns: [
+    {
+      componentList: []
+    }
+  ],
+  commonConfigAssignSign: ''
 }

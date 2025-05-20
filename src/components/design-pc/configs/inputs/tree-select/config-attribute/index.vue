@@ -13,9 +13,13 @@
       <a-form-item label="控件大小">
         <RadioButton :options="options" value-key="size" :radio-options="sizeOptions"></RadioButton>
       </a-form-item>
-      <a-form-item label="是否多选">
-        <a-switch v-model:checked="options.multiple" />
+      <a-form-item label="默认展开">
+        <a-switch v-model:checked="options.expandAll" />
       </a-form-item>
+      <!-- 似乎有bug 先注释了 -->
+      <!-- <a-form-item label="是否多选">
+        <a-switch v-model:checked="options.multiple" />
+      </a-form-item> -->
       <a-form-item>
         <InputValidate :options="options" :hide-validator="true" :hide-reg="true"></InputValidate>
       </a-form-item>

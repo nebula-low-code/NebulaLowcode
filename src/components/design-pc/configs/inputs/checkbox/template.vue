@@ -3,6 +3,7 @@
     <label
       :class="options.required ? 'required' : ''"
       :style="{
+        fontSize: themeConfig.token.fontSize + 'px',
         display: options.labelShow ? '' : 'none',
         width: options.labelAlign == 'top' ? '100%' : options.width + 'px',
         textAlign: options.labelAlign == 'top' ? 'left' : options.labelAlign as 'left' | 'center' | 'right',
@@ -16,14 +17,13 @@
         style="vertical-align: middle"
         v-model:value="options.value"
         :defaultValue="options.defaultValue"
-        :icon-size="16"
         :disabled="options.disabled"
       >
         <a-checkbox shape="square" :name="item.entryName" :value="item.entryCode" v-for="(item, key) in extraData.dicData" :key="item.value">
           {{ item.entryName }}
         </a-checkbox>
       </a-checkbox-group>
-      <a-checkbox-group v-else style="vertical-align: middle" v-model:value="options.value" :defaultValue="options.defaultValue" :icon-size="16" :disabled="options.disabled">
+      <a-checkbox-group v-else style="vertical-align: middle" v-model:value="options.value" :defaultValue="options.defaultValue" :disabled="options.disabled">
         <a-checkbox shape="square" :name="item.label" :value="item.value" v-for="(item, key) in checkOptions" :key="item.value">
           {{ item.label }}
         </a-checkbox>
@@ -33,7 +33,8 @@
 </template>
 <script lang="ts">
 import optionsConfig from './options-config'
-import { mapActions } from 'pinia'
+import { mapActions, mapState } from 'pinia'
+import { useThemeStore } from '@/stores'
 import { useDataStore } from '@/stores'
 export default {
   type: 'nebula-component-checkbox',
@@ -46,8 +47,8 @@ export default {
       }
     }
   },
-  mounted() {},
   computed: {
+    ...mapState(useThemeStore, ['themeConfig']),
     flexStyle() {
       if (this.options.labelAlign != 'top') {
         return {

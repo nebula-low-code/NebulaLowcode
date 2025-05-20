@@ -12,7 +12,7 @@
       />
     </a-form-item>
     <a-form-item label="选项配置">
-      <ChartsDataConfig :interface-data-config="options.interfaceDataConfig"> </ChartsDataConfig>
+      <ChartsDataConfig :interface-data-config="options.interfaceDataConfig" :is-multi-y-axis="true"> </ChartsDataConfig>
     </a-form-item>
   </a-form>
 </template>

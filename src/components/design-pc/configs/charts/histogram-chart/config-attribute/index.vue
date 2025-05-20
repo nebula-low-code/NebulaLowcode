@@ -7,6 +7,9 @@
       <a-form-item label="图例">
         <RadioButton :options="options" size="small" value-key="legendAlign" :radio-options="legendAlign"></RadioButton>
       </a-form-item>
+      <a-form-item label="标签">
+        <RadioButton :options="options" size="small" value-key="label" :radio-options="labelOption"></RadioButton>
+      </a-form-item>
       <a-form-item label="图表偏移">
         <ChartsOffset :options="options" value-key="grid"></ChartsOffset>
       </a-form-item>
@@ -14,7 +17,7 @@
         <XAxisConfig :options="options" value-key="xAxisConfig"></XAxisConfig>
       </a-form-item>
       <a-form-item>
-        <YAxisConfig :options="options" value-key="yAxisConfig"></YAxisConfig>
+        <YAxisConfig :options="options" value-key="yAxisConfig" :is-multi-y-axis="true"></YAxisConfig>
       </a-form-item>
     </a-form>
   </div>
@@ -47,6 +50,21 @@ const legendAlign = [
   {
     label: '右',
     value: 'right'
+  },
+  {
+    label: '无',
+    value: 'none'
+  }
+]
+
+const labelOption = [
+  {
+    label: '外部',
+    value: 'outside'
+  },
+  {
+    label: '内部',
+    value: 'inside'
   },
   {
     label: '无',

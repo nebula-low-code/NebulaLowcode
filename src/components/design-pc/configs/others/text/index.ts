@@ -5,6 +5,7 @@ export default {
   type: 'van-design-text',
   name: '文本',
   icon: 'iconwenben',
+  isInputComponent: true, // 是否为输入组件
   isRefreshComponent: true, // 是否为可刷新组件
   component: layoutTemplate,
   options: optionsConfig

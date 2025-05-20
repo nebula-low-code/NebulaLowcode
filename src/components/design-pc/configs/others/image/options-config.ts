@@ -30,5 +30,6 @@ export default {
   commonConfigCompWidth: '100',
   commonConfigCompHeightUnit: 'auto',
   commonConfigCompHeight: '',
-  _data_origin_component_uuid: ''
+  _data_origin_component_uuid: '',
+  commonConfigAssignIsCol: false
 }

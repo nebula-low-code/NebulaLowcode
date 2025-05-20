@@ -10,6 +10,7 @@
 import { ref, defineComponent, computed, reactive, onMounted } from 'vue'
 import { useDataStore } from '@/stores'
 import { generateUUID } from '@/utils/uuid'
+import { isNetworkDatasource } from '@/utils/string-utils'
 const store = useDataStore()
 
 const emit = defineEmits(['onChange'])
@@ -19,7 +20,7 @@ let curColumn = store.curColumn
 let existOperateFlag = false
 console.log('--curColumn----')
 const tableFieldList = computed(() => {
-  if (options.value.contentDataSource == 'radio-button-interface') {
+  if (isNetworkDatasource(options.value.contentDataSource)) {
     return initTableFieldList(options.value.interfaceDataConfig.uuid, options.value.interfaceDataConfig.key)
   }
   return []
@@ -37,16 +38,15 @@ function initTableFieldList(operateApiId: any, key: any) {
   let interfaceData = store.interfaceDataById(operateApiId)
   let tableFieldList = []
   if (interfaceData) {
-
-      let respList = interfaceData.data.responseData[key]
-      if (respList&&respList.length > 0) {
-        let temp = respList[0]
-        for (let k in temp) {
-          tableFieldList.push({
-            columnName: k
-          })
-        }
+    let respList = interfaceData.data.responseData[key]
+    if (respList && respList.length > 0) {
+      let temp = respList[0]
+      for (let k in temp) {
+        tableFieldList.push({
+          columnName: k
+        })
       }
+    }
   }
   return tableFieldList
 }
@@ -91,16 +91,16 @@ function onColunmChange(values: any) {
       let columnItem = {
         width: 200,
         value: vItem,
-        title:vItem,
+        title: vItem,
         enValue: '',
         colValue: vItem,
         dataIndex: vItem,
         key: '',
         align: 'center',
-        colIndex: curColumn.colIndex,// 注意这里是父列的colIndex
+        colIndex: curColumn.colIndex, // 注意这里是父列的colIndex
         specialColumnsConfigs: {},
         interfaceDataConfig: {},
-        version:"2.0.0",
+        version: '2.0.0',
         popoverVisible: false //用于输入多语言的弹框
       }
       // 2023-08-24 这块处理 specialColumn 的逻辑 后面想想能不能优化
@@ -124,14 +124,14 @@ function onColunmChange(values: any) {
     }
   })
 
-//   console.log('--onColunmChange----', values)
-//   curColumn.children = []
-//   values.forEach((vItem: any) => {
-//     curColumn.children.push({
-//       title: vItem,
-//       dataIndex: vItem
-//     })
-//   })
+  //   console.log('--onColunmChange----', values)
+  //   curColumn.children = []
+  //   values.forEach((vItem: any) => {
+  //     curColumn.children.push({
+  //       title: vItem,
+  //       dataIndex: vItem
+  //     })
+  //   })
 }
 
 onMounted(() => {

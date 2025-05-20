@@ -1,16 +1,18 @@
 <template>
   <div style="display: flex; align-items: center">
-    <label style="margin-right: 8px">
+    <label style="margin-right: 8px" :style="{ fontSize: themeConfig.token.fontSize + 'px' }">
       {{ options.prefixLabel }}
     </label>
     <a-switch v-model:checked="options.switchValue" :size="options.size" />
-    <label style="margin-left: 8px">
+    <label style="margin-left: 8px" :style="{ fontSize: themeConfig.token.fontSize + 'px' }">
       {{ options.suffixLabel }}
     </label>
   </div>
 </template>
 <script lang="ts">
 import optionsConfig from './options-config'
+import { mapActions, mapState } from 'pinia'
+import { useThemeStore } from '@/stores'
 export default {
   type: 'nebula-component-switch',
   components: {},
@@ -19,7 +21,9 @@ export default {
       options: optionsConfig
     }
   },
-  computed: {},
+  computed: {
+    ...mapState(useThemeStore, ['themeConfig'])
+  },
   watch: {
     'options.switchValue': {
       handler: function (val) {

@@ -1,6 +1,7 @@
 export default {
   value: '',
   legendAlign: 'top',
+  label: 'none',
   commonConfigCompWidthUnit: '%',
   commonConfigCompWidth: '100',
   commonConfigCompHeightUnit: 'px',
@@ -43,7 +44,8 @@ export default {
     },
     nameTextStyle: {
       color: '#333'
-    }
+    },
+    additionalYAxisConfig: [] //多Y轴配置
   },
   grid: {
     left: 0,
@@ -59,20 +61,7 @@ export default {
   chartPEvents: {},
   // 配置
   contentDataSource: 'radio-button-default',
-  chartColors: [
-    '#63b2ee',
-    '#76da91',
-    '#f8cb7f',
-    '#f89588',
-    '#7cd6cf',
-    '#9192ab',
-    '#7898e1',
-    '#efa666',
-    '#eddd86',
-    '#9987ce',
-    '#63b2ee',
-    '#76da91'
-  ],
+  chartColors: ['#63b2ee', '#76da91', '#f8cb7f', '#f89588', '#7cd6cf', '#9192ab', '#7898e1', '#efa666', '#eddd86', '#9987ce', '#63b2ee', '#76da91'],
   echartsOptions: {
     color: [],
     dataset: [
@@ -91,6 +80,7 @@ export default {
     yAxis: {
       type: 'value'
     },
+    additionalYAxis: [], //多Y轴配置
     series: []
   },
   interfaceDataConfig: {
@@ -110,7 +100,8 @@ export default {
     chartData: {
       rows: []
     },
-    dynamicYAxis: false
+    dynamicYAxis: false,
+    additionalYAxis: [] //多Y轴配置
   },
   defaultData: {
     chartSettings: {

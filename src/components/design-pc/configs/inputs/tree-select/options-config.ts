@@ -5,6 +5,7 @@ export default {
   label: '标题',
   enLabel: '',
   multiple: false,
+  expandAll: false,
   width: 80,
   labelShow: true,
   treeData: [],

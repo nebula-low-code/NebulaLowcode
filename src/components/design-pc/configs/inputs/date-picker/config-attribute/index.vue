@@ -10,6 +10,9 @@
       <a-form-item label="提示信息">
         <ValueInput :options="options" value-key="placeholder" en-value-key="enPlaceHolder"></ValueInput>
       </a-form-item>
+      <a-form-item label="日期格式">
+        <ValueSelect :options="options" value-key="format" :select-option="formatOptions"></ValueSelect>
+      </a-form-item>
       <a-form-item label="禁选日期">
         <RadioButton :options="options" value-key="forbidRange" :radio-options="forbidOptions"></RadioButton>
       </a-form-item>
@@ -26,6 +29,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import ValueInput from '@/components/common-attribute-config/value-input.vue'
+import ValueSelect from '@/components/common-attribute-config/value-select.vue'
 import LabelDisplay from '@/components/common-attribute-config/label-display.vue'
 import RadioButton from '@/components/common-attribute-config/radio-button.vue'
 import InputValidate from '@/components/common-attribute-config/value-validate.vue'
@@ -56,13 +60,36 @@ const sizeOptions = [
   },
   {
     label: '中',
-    value: 'default'
+    value: 'middle'
   },
   {
     label: '小',
     value: 'small'
   }
 ]
+
+const formatOptions = [
+  {
+    label: '年月日',
+    value: 'date'
+  },
+  {
+    label: '年月',
+    value: 'year-month'
+  },
+  {
+    label: '年月日 时分秒',
+    value: 'datetime'
+  }
+]
+
+initDefault()
+
+function initDefault() {
+  if (!options.value.format) {
+    options.value.format = 'date'
+  }
+}
 </script>
 
 <style lang="less" scoped></style>

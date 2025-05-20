@@ -1,41 +1,77 @@
 <template>
-  <a-cascader :value="echoCascadeValue" style="width: 100%" :options="options" :placeholder="placeholder || '请选择'" @change="onChange"></a-cascader>
+  <div>
+    <div style="display: flex">
+      <a-cascader :value="echoCascadeValue" :multiple="isMulti" style="width: 100%" :options="options" :placeholder="placeholder || '请选择'" @change="onChange"></a-cascader>
+      <a-button type="link" v-if="isNeedMultiSwitch" @click="switchMulti">{{ isMulti ? '单选' : '多选' }}</a-button>
+      <!-- TODO 2025-02-08 暂时先注释了，展现形式应该是怎么样的，还没想好，多少地方需要变动也没想好  -->
+      <div class="value-select-split" v-if="props.isFilter" @click="changeFilterValueType"><a-button type="link">切换</a-button></div>
+    </div>
+    <div v-if="props.isFilter && props.paramItem.valueSelectFilter" style="display: flex; margin-top: 10px">
+      <a-input placeholder="解析字段通过'.'分割" v-model:value="props.paramItem.filterValue" />
+      <a-tooltip>
+        <template #title>
+          <span>用于处理复杂数据解析，解析字段通过'.'分割</span>
+        </template>
+        <exclamation-circle-filled style="position: absolute; right: -10px; top: 50px" />
+      </a-tooltip>
+    </div>
+    <!-- <div class="switch">{{ isMulti ? '单选' : '多选' }}</div> -->
+  </div>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useDataStore } from '@/stores'
 import { DataSourceType } from '@/utils/constants'
-
-const props = defineProps<{
-  paramItem: any
-  placeholder?: string
-  echoConfig?: boolean
-  hidePageParam?: boolean
-  hidePageVariable?: boolean
-  hideComponent?: boolean
-  hideGlobal?: boolean
-  hideInterface?: boolean
-  hideFunction?: boolean
-  hideEventInterface?: boolean
-  hideMobileEvent?: boolean
-}>()
-
+import { multiOutputValues } from '@/utils/multi-output-component'
+import { isPlainObject } from 'lodash'
+import { isNetworkDatasource } from '@/utils/string-utils'
+import { ExclamationCircleFilled } from '@ant-design/icons-vue'
+const props = withDefaults(
+  defineProps<{
+    paramItem: any
+    placeholder?: string
+    echoConfig?: boolean
+    hidePageParam?: boolean
+    hidePageVariable?: boolean
+    hideComponent?: boolean
+    hideComponentObject?: boolean
+    hideGlobal?: boolean
+    hideInterface?: boolean
+    hideFunction?: boolean
+    hideEventInterface?: boolean
+    hideMobileEvent?: boolean
+    isMultiple?: boolean
+    isNeedMultiSwitch?: boolean
+    isFilter?: boolean
+  }>(),
+  {
+    isMultiple: false
+  }
+)
+const isMulti = ref(false)
 const emit = defineEmits(['onChange'])
 
 const store = useDataStore()
 
 const echoCascadeValue = computed(() => {
-  if (props.paramItem.echoValues) {
+  if (isMulti.value && props.paramItem.paramList && props.paramItem.paramList.length > 0) {
+    return props.paramItem.echoValues
+  } else {
+    return handleSingleEcho(props.paramItem)
+  }
+})
+function handleSingleEcho(paramItem: any) {
+  if (paramItem.echoValues) {
     // console.log('echoValues***==', props.paramItem.echoValues)
     return props.paramItem.echoValues
   }
   let echoValues = [] as any
-  let interfaceDataConfig = props.paramItem
-  if (props.paramItem.param_value_type === 'T') {
+  let interfaceDataConfig = paramItem
+  if (paramItem.param_value_type === 'T') {
     //处理下多输出的组件
     let comp = store.componentConfigByUuid(interfaceDataConfig.relevanceComponentUuid)
     if (comp && comp.isMultiOutputComponent) {
-      if (props.paramItem.param_v_key) {
+      if (paramItem.param_v_key) {
         echoValues = [DataSourceType.COMPONENT, interfaceDataConfig.relevanceComponentUuid, interfaceDataConfig.param_v_key]
       } else {
         echoValues = [DataSourceType.COMPONENT, interfaceDataConfig.relevanceComponentUuid]
@@ -43,38 +79,36 @@ const echoCascadeValue = computed(() => {
     } else {
       echoValues = [DataSourceType.COMPONENT, interfaceDataConfig.relevanceComponentUuid]
     }
-  } else if (props.paramItem.param_value_type === 'V') {
-    if (props.paramItem.type == DataSourceType.CUSTOM_INTERFACE) {
-      echoValues = [props.paramItem.operateApiId, props.paramItem.param_v_key]
+  } else if (paramItem.param_value_type === 'V') {
+    if (paramItem.type == DataSourceType.CUSTOM_INTERFACE) {
+      echoValues = [paramItem.operateApiId, paramItem.param_v_key]
     } else {
-      echoValues = [DataSourceType.CUSTOM, props.paramItem.param_v_key]
+      echoValues = [DataSourceType.CUSTOM, paramItem.param_v_key]
     }
-  } else if (props.paramItem.param_value_type === 'B') {
-    if (props.paramItem.type == DataSourceType.INTERFACE || props.paramItem.type == DataSourceType.CONNECT) {
+  } else if (paramItem.param_value_type === 'B') {
+    if (paramItem.type == DataSourceType.INTERFACE || paramItem.type == DataSourceType.CONNECT) {
       //若有param_v_key,代表绑定了数组类接口里的值,若无,则代表绑定了对象类接口里的值
-      if (props.paramItem.param_v_key && props.paramItem.param_v_key.length > 0) {
-        echoValues = [props.paramItem.param_v_name, props.paramItem.middle, props.paramItem.param_v_key]
+      if (paramItem.param_v_key && paramItem.param_v_key.length > 0) {
+        echoValues = [paramItem.param_v_name, paramItem.middle, paramItem.param_v_key]
       } else {
-        echoValues = [props.paramItem.param_v_name, props.paramItem.middle]
+        echoValues = [paramItem.param_v_name, paramItem.middle]
       }
     }
-  } else if (props.paramItem.param_value_type === 'F') {
-    if (props.paramItem.middle && props.paramItem.middle.length > 0) {
+  } else if (paramItem.param_value_type === 'F') {
+    if (paramItem.middle && paramItem.middle.length > 0) {
       //有middle代表在分组中
-      echoValues = [DataSourceType.FUNCTION, props.paramItem.type, props.paramItem.middle, props.paramItem.operateApiId, props.paramItem.param_v_key]
+      echoValues = [DataSourceType.FUNCTION, paramItem.type, paramItem.middle, paramItem.operateApiId, paramItem.param_v_key]
     } else {
-      echoValues = [DataSourceType.FUNCTION, props.paramItem.type, props.paramItem.operateApiId, props.paramItem.param_v_key]
+      echoValues = [DataSourceType.FUNCTION, paramItem.type, paramItem.operateApiId, paramItem.param_v_key]
     }
-  } else if (props.paramItem.param_value_type === 'G') {
+  } else if (paramItem.param_value_type === 'G') {
     echoValues = [DataSourceType.GLOBAL, interfaceDataConfig.middle, interfaceDataConfig.param_v_key]
-  } else if (props.paramItem.param_value_type === 'E') {
+  } else if (paramItem.param_value_type === 'E') {
     //扫码/微信登录/企微登录
-    echoValues = [props.paramItem.operateApiId, props.paramItem.param_v_key]
+    echoValues = [paramItem.operateApiId, paramItem.param_v_key]
   }
-  // console.log('echoValues==', echoValues)
   return echoValues
-})
-
+}
 const options = computed(() => {
   const optionsCustom = {
     type: DataSourceType.CUSTOM,
@@ -94,6 +128,44 @@ const options = computed(() => {
     value: DataSourceType.COMPONENT,
     children: []
   } as any
+  const optionsComponentObject = {
+    type: DataSourceType.COMPONENT_OBJECT,
+    label: '对象',
+    value: DataSourceType.COMPONENT_OBJECT,
+    children: []
+  } as any
+  const optionsGlobal = {
+    type: DataSourceType.GLOBAL,
+    label: '全局变量',
+    value: DataSourceType.GLOBAL,
+    children: []
+  } as any
+  const optionsFunction = {
+    type: DataSourceType.FUNCTION,
+    label: '函数脚本',
+    value: DataSourceType.FUNCTION,
+    children:
+      store.deviceType === 'pc'
+        ? [
+            {
+              value: 'function',
+              label: '函数',
+              children: []
+            },
+            {
+              value: 'script',
+              label: '脚本',
+              children: []
+            }
+          ]
+        : [
+            {
+              value: 'script',
+              label: '脚本',
+              children: []
+            }
+          ]
+  } as any
 
   let options = []
   if (!props.hidePageParam) {
@@ -105,16 +177,36 @@ const options = computed(() => {
   if (!props.hideComponent) {
     options.push(optionsComponent)
   }
+  if (!props.hideComponentObject) {
+    options.push(optionsComponentObject)
+  }
+  if (!props.hideGlobal) {
+    options.push(optionsGlobal)
+  }
+  if (!props.hideFunction) {
+    options.push(optionsFunction)
+  }
 
-  //页面入参
-  let pageParams = store.pageConfig.config.pageParamsList
-  pageParams &&
-    pageParams.forEach((param: any) => {
-      optionsCustom.children.push({
-        label: param.operateHrefPageParamName,
-        value: param.operateHrefPageParamName
+  //页面入参(弹窗和页面隔离)
+  if (store.isPageDesigner) {
+    let pageParams = store.pageConfig.config.pageParamsList
+    pageParams &&
+      pageParams.forEach((param: any) => {
+        optionsCustom.children.push({
+          label: param.operateHrefPageParamName,
+          value: param.operateHrefPageParamName
+        })
       })
-    })
+  } else {
+    let pageParams = store.currentModalConfig.config.pageParamsList
+    pageParams &&
+      pageParams.forEach((param: any) => {
+        optionsCustom.children.push({
+          label: param.operateHrefPageParamName,
+          value: param.operateHrefPageParamName
+        })
+      })
+  }
 
   //页面变量
   let pageVariables = store.pageConfig.config.pageVariableList
@@ -127,89 +219,104 @@ const options = computed(() => {
     })
 
   //组件
-  store.inputComponentList.forEach((componentItem: any) => {
-    let childItem = {
-      label: componentItem.options.commonConfigAssignName,
-      value: componentItem.uuid,
-      children: []
-    } as any
-    optionsComponent.children.push(childItem)
-    //多输出组件
-    if (componentItem.type === 'van-design-tree' || componentItem.type === 'van-design-tree-select') {
-      childItem.children.push({
-        label: '选中数值',
-        value: 'value'
-      })
-      childItem.children.push({
-        label: '选中名称',
-        value: 'label'
-      })
-    } else if (componentItem.type === 'van-design-table') {
-      childItem.children.push({
-        label: '选定行数据',
-        value: 'rowdata'
-      })
-      childItem.children.push({
-        label: '每页行数',
-        value: 'rownum'
-      })
-      childItem.children.push({
-        label: '当前页号',
-        value: 'pagenum'
-      })
-    } else if (componentItem.type === 'van-design-workflow') {
-      childItem.children.push({
-        label: '待审批人',
-        value: 'pendingUser'
-      })
-      childItem.children.push({
-        label: '审核人（上个节点）',
-        value: 'approvedUser'
-      })
-      childItem.children.push({
-        label: '审核意见（上个节点）',
-        value: 'approvedAdvice'
-      })
-      childItem.children.push({
-        label: '发起人ID',
-        value: 'startUser'
-      })
-    } else if (componentItem.type === 'van-design-calendar-range') {
-      childItem.children.push({
-        label: '日期范围',
-        value: 'value'
-      })
-      childItem.children.push({
-        label: '开始日期',
-        value: 'startDate'
-      })
-      childItem.children.push({
-        label: '结束日期',
-        value: 'endDate'
-      })
-    } else if (componentItem.type === 'van-design-wechat-login') {
-      childItem.children.push({
-        label: '手机号,openid,unionid',
-        value: 'value'
-      })
-      childItem.children.push({
-        label: '手机号',
-        value: 'phoneNumber'
-      })
-      childItem.children.push({
-        label: 'openid',
-        value: 'openid'
-      })
-      childItem.children.push({
-        label: 'unionid',
-        value: 'unionid'
-      })
+  if (store.isPageDesigner) {
+    store.allInputComponentList.forEach((componentItem: any) => {
+      let childItem = {
+        label: componentItem.options.commonConfigAssignName,
+        value: componentItem.uuid,
+        children: []
+      } as any
+      optionsComponent.children.push(childItem)
+      //多输出组件
+      childItem.children = multiOutputValues(componentItem)
+    })
+  } else {
+    // console.log('--------store.pageConfig.config',store.pageConfig,store.currentInputComponentList)
+    // let modalName = "";
+    // store.pageConfig.modalList.forEach((modalItem: any) => {
+    //     if(modalItem.uuid==store.currentModalUuid){
+    //         modalName=modalItem.config.reportName
+    //     }
+    // })
+    // if(modalName){
+    //     modalName+="-"
+    // }
+    //弹窗里面,只允许选择本弹窗和父页面的组件
+    let modalInputComps = store.currentInputComponentList
+    modalInputComps.forEach((componentItem: any) => {
+      let childItem = {
+        label: componentItem.options.commonConfigAssignName,
+        value: componentItem.uuid,
+        children: []
+      } as any
+      optionsComponent.children.push(childItem)
+      //多输出组件
+      childItem.children = multiOutputValues(componentItem)
+    })
+  }
+  if (store.currentEvent) {
+    //组件对象
+    let event = store.currentEvent.variableMap
+    for (const key in event) {
+      if (Object.prototype.hasOwnProperty.call(event, key)) {
+        const element = event[key]
+        let childItem = {
+          label: element.relevanceComponentName,
+          value: key,
+          children: []
+        } as any
+        for (const key1 in element) {
+          if (Object.prototype.hasOwnProperty.call(element, key1)) {
+            if (key1 !== 'relevanceComponentName') {
+              const element1 = element[key1]
+              let temp = {
+                label: element1.outputValueName,
+                value: key1
+              }
+              if (key1 == 'currentRow') {
+                temp.children = element1.variableList
+              }
+              childItem.children.push(temp)
+            }
+          }
+        }
+        console.log('childItem---', childItem)
+
+        optionsComponentObject.children.push(childItem)
+      }
     }
+  }
+
+  //全局变量
+  let globalList = store.globalVariableList
+  globalList.forEach((group: any) => {
+    let groupOption = {
+      type: DataSourceType.GLOBAL,
+      label: group.scopeName,
+      value: group.scopeId,
+      children: [] as any[]
+    }
+    group.children.forEach((variable: any) => {
+      groupOption.children.push({
+        type: DataSourceType.GLOBAL,
+        label: variable.variableKey,
+        value: variable.variableKey
+      })
+    })
+    optionsGlobal.children.push(groupOption)
   })
+
+  // 函数脚本
+  if (store.deviceType === 'pc') {
+    optionsFunction.children[0].children = renameFunctionItem(store.functionList)
+    optionsFunction.children[1].children = renameFunctionItem(store.scriptList)
+  } else {
+    optionsFunction.children[0].children = renameFunctionItem(store.scriptList)
+  }
 
   //接口
   if (!props.hideInterface) {
-    let interfaceList: any[] = store.interfaceList
+    let interfaceList = store.interfaceList
     for (const interfaceItem of interfaceList) {
       const childrenData = []
       const responseData = interfaceItem.data.responseData || {}
@@ -222,6 +329,7 @@ const options = computed(() => {
             children: [] as any[]
           }
           childrenData.push(childObj)
+          //数组用于列表中组件设值事件
           if (Array.isArray(responseDataItem) && responseDataItem.length > 0) {
             let item = responseDataItem[0]
             for (const itemKey in item) {
@@ -233,12 +341,25 @@ const options = computed(() => {
               }
             }
           }
+          //解析对象中的字段
+          if (isPlainObject(responseDataItem)) {
+            const childrenData2 = []
+            for (const key2 in responseDataItem) {
+              if (Object.prototype.hasOwnProperty.call(responseDataItem, key2)) {
+                childrenData2.push({
+                  label: key2,
+                  value: key2
+                })
+              }
+            }
+            childObj.children = childrenData2
+          }
         }
       }
       const optionsInterface = {
         type: DataSourceType.INTERFACE,
         label: interfaceItem.data.name,
-        value: interfaceItem.data.name,
+        value: interfaceItem.id,
         id: interfaceItem.id,
         children: childrenData
       }
@@ -266,6 +387,35 @@ const options = computed(() => {
       }
       options.push(childObj)
     }
+  }
+
+  if (store.containGetLanguageEvent) {
+    options.push({
+      type: DataSourceType.EVENT,
+      label: '获取语言',
+      value: '获取语言',
+      children: [
+        {
+          type: DataSourceType.EVENT,
+          label: '语言名称',
+          value: 'language'
+        }
+      ]
+    })
+  }
+  if (store.containDataInsertEvent) {
+    options.push({
+      type: DataSourceType.EVENT,
+      label: '数据新增',
+      value: '数据新增',
+      children: [
+        {
+          type: DataSourceType.EVENT,
+          label: 'id',
+          value: 'id'
+        }
+      ]
+    })
   }
 
   //移动端事件,包括微信登录/企微登录/扫码
@@ -351,6 +501,21 @@ const options = computed(() => {
             type: DataSourceType.EVENT,
             label: 'token',
             value: 'token'
+          }
+        ]
+      })
+    }
+
+    if (store.containIAMTokenEvent) {
+      options.push({
+        type: DataSourceType.EVENT,
+        label: 'IAMToken',
+        value: 'IAMToken',
+        children: [
+          {
+            type: DataSourceType.EVENT,
+            label: 'accessToken',
+            value: 'accessToken'
           }
         ]
       })
@@ -465,97 +630,154 @@ function parseFunctionReturnValue(value: any) {
 function onChange(values: any, selectedOptions: any) {
   // console.log('---values---', values)
   // console.log('---selectedOptions---', selectedOptions)
-  props.paramItem.echoValues = values
-
+  if (isMulti.value) {
+    props.paramItem.echoValues = values
+    props.paramItem.paramList = []
+    values &&
+      values.forEach((item: any, index: number) => {
+        let tempParam = {}
+        handleSingleChange(tempParam, item, selectedOptions[index])
+        props.paramItem.paramList.push(tempParam)
+      })
+  } else {
+    props.paramItem.echoValues = values
+    handleSingleChange(props.paramItem, values, selectedOptions)
+  }
+  console.log('paramItem=', JSON.stringify(props.paramItem))
+  emit('onChange', selectedOptions)
+}
+function handleSingleChange(paramItem: any, values: any, selectedOptions: any) {
   //先删除,避免带出上次的无用属性
-  delete props.paramItem.operateApiId
-  delete props.paramItem.param_value_type
-  delete props.paramItem.type
-  delete props.paramItem.param_v_key
-  delete props.paramItem.middle
-  delete props.paramItem.relevanceComponentUuid
-  delete props.paramItem.param_v_name
-  delete props.paramItem.param_value
+  delete paramItem.operateApiId
+  delete paramItem.param_value_type
+  delete paramItem.type
+  delete paramItem.param_v_key
+  delete paramItem.middle
+  delete paramItem.relevanceComponentUuid
+  delete paramItem.param_v_name
+  delete paramItem.param_value
   if (selectedOptions && selectedOptions.length > 0) {
     const dataSourceType = selectedOptions[0].type
-    console.log('dataSourceType=', dataSourceType)
     if (dataSourceType === DataSourceType.COMPONENT) {
       //组件
-      props.paramItem.param_value_type = 'T'
-      props.paramItem.relevanceComponentUuid = selectedOptions[1].value
+      paramItem.param_value_type = 'T'
+      paramItem.relevanceComponentUuid = selectedOptions[1].value
       if (selectedOptions.length === 3) {
         // 处理多输出组件
-        props.paramItem.param_v_key = selectedOptions[2].value
+        paramItem.param_v_key = selectedOptions[2].value
       }
-    } else if (dataSourceType === DataSourceType.INTERFACE || dataSourceType === dataSourceType.CONNECT) {
+    } else if (dataSourceType === DataSourceType.COMPONENT_OBJECT) {
+      console.log('---selectedOptions---', selectedOptions)
+      let oValue = selectedOptions[2].value
+      paramItem.param_value_type = 'O'
+      paramItem.relevanceComponentUuid = selectedOptions[1].value
+      if (oValue == 'currentRow' && selectedOptions.length == 4) {
+        paramItem.middle = selectedOptions[2].value
+        paramItem.param_v_key = selectedOptions[3].value
+      } else {
+        paramItem.param_v_key = selectedOptions[2].value
+      }
+    } else if (isNetworkDatasource(dataSourceType)) {
       //接口
-      props.paramItem.param_value_type = 'B'
-      props.paramItem.type = selectedOptions[0].type
-      props.paramItem.param_v_name = selectedOptions[0].label
-      props.paramItem.middle = selectedOptions[1].label
-      props.paramItem.operateApiId = selectedOptions[0].id
+      paramItem.param_value_type = 'B'
+      paramItem.type = selectedOptions[0].type
+      paramItem.param_v_name = selectedOptions[0].label
+      paramItem.middle = selectedOptions[1].label
+      paramItem.operateApiId = selectedOptions[0].id
 
       if (selectedOptions.length > 2) {
-        props.paramItem.param_v_key = selectedOptions[2].label
+        paramItem.param_v_key = selectedOptions[2].label
       } else {
-        // props.paramItem.operateApiId = selectedOptions[0].data.id
+        // paramItem.operateApiId = selectedOptions[0].data.id
       }
     } else if (dataSourceType === DataSourceType.CUSTOM) {
       //入参
-      props.paramItem.param_value_type = 'V'
-      props.paramItem.param_v_key = selectedOptions[1].value
-      props.paramItem.type = DataSourceType.CUSTOM
+      paramItem.param_value_type = 'V'
+      paramItem.param_v_key = selectedOptions[1].value
+      paramItem.type = DataSourceType.CUSTOM
     } else if (dataSourceType === DataSourceType.VARIABLE) {
       //页面变量
-      props.paramItem.param_value_type = 'V'
-      props.paramItem.param_v_key = selectedOptions[1].value
-      props.paramItem.type = DataSourceType.VARIABLE
+      paramItem.param_value_type = 'V'
+      paramItem.param_v_key = selectedOptions[1].value
+      paramItem.type = DataSourceType.VARIABLE
     } else if (dataSourceType === DataSourceType.GLOBAL) {
       //全局变量
-      props.paramItem.type = 'custom'
-      props.paramItem.param_value_type = 'G'
-      props.paramItem.middle = selectedOptions[1].value
-      props.paramItem.param_v_key = selectedOptions[2].value
+      paramItem.type = 'custom'
+      paramItem.param_value_type = 'G'
+      paramItem.middle = selectedOptions[1].value
+      paramItem.param_v_key = selectedOptions[2].value
     } else if (dataSourceType === DataSourceType.FUNCTION) {
-      props.paramItem.param_value_type = 'F'
-      props.paramItem.type = selectedOptions[1].value
+      paramItem.param_value_type = 'F'
+      paramItem.type = selectedOptions[1].value
       let type = selectedOptions[1].value
       if (type === 'script') {
         //脚本函数
         if (selectedOptions.length === 5) {
           //如果有5层,代表函数脚本在分组中
-          props.paramItem.middle = selectedOptions[selectedOptions.length - 3].id
+          paramItem.middle = selectedOptions[selectedOptions.length - 3].id
         } else {
-          props.paramItem.middle = undefined
+          paramItem.middle = undefined
         }
-        props.paramItem.operateApiId = selectedOptions[selectedOptions.length - 2].id
-        props.paramItem.param_v_key = selectedOptions[selectedOptions.length - 1].id
+        paramItem.operateApiId = selectedOptions[selectedOptions.length - 2].id
+        paramItem.param_v_key = selectedOptions[selectedOptions.length - 1].id
       } else {
         if (selectedOptions.length === 4) {
           //如果有4层,代表函数脚本在分组中
-          props.paramItem.middle = selectedOptions[selectedOptions.length - 2].id
+          paramItem.middle = selectedOptions[selectedOptions.length - 2].id
         } else {
-          props.paramItem.middle = undefined
+          paramItem.middle = undefined
         }
-        props.paramItem.operateApiId = selectedOptions[selectedOptions.length - 1].id
-        props.paramItem.param_v_key = selectedOptions[selectedOptions.length - 1].id
+        paramItem.operateApiId = selectedOptions[selectedOptions.length - 1].id
+        paramItem.param_v_key = selectedOptions[selectedOptions.length - 1].id
       }
     } else if (dataSourceType === DataSourceType.CUSTOM_INTERFACE) {
-      props.paramItem.param_value_type = 'V'
-      props.paramItem.type = selectedOptions[0].type
-      props.paramItem.operateApiId = selectedOptions[0].id
+      paramItem.param_value_type = 'V'
+      paramItem.type = selectedOptions[0].type
+      paramItem.operateApiId = selectedOptions[0].id
       if (selectedOptions.length > 1) {
-        props.paramItem.param_v_key = selectedOptions[1].value
+        paramItem.param_v_key = selectedOptions[1].value
       } else {
       }
     } else if (dataSourceType === DataSourceType.EVENT) {
-      props.paramItem.param_value_type = 'E'
-      props.paramItem.operateApiId = selectedOptions[0].value
-      props.paramItem.param_v_key = selectedOptions[1].value
-      props.paramItem.type = DataSourceType.EVENT
+      paramItem.param_value_type = 'E'
+      paramItem.operateApiId = selectedOptions[0].value
+      paramItem.param_v_key = selectedOptions[1].value
+      paramItem.type = DataSourceType.EVENT
     }
   }
-
-  emit('onChange', selectedOptions)
+}
+// 这么写主要是为了处理如果已经配了多选的，则需要回显多选，如果没配，允许单选
+if (props.isMultiple) {
+  if (props.paramItem.paramList && props.paramItem.paramList.length > 0) {
+    isMulti.value = props.isMultiple
+  }
+}
+function switchMulti() {
+  if (isMulti.value) {
+    props.paramItem.paramList = []
+  }
+  isMulti.value = !isMulti.value
+}
+function changeFilterValueType() {
+  props.paramItem.valueSelectFilter = !props.paramItem.valueSelectFilter
 }
 </script>
+<style scoped>
+.switch {
+  width: 40px;
+  line-height: 32px;
+  cursor: pointer;
+  text-align: center;
+}
+.value-select-div {
+  display: flex;
+  align-items: center;
+}
+.value-select-split {
+  width: 20px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+</style>

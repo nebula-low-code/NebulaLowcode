@@ -5,6 +5,7 @@
 import { ref, computed } from 'vue'
 import { useDataStore } from '@/stores'
 import { DataSourceType } from '@/utils/constants'
+import { multiOutputValues } from '@/utils/multi-output-component'
 import { message } from 'ant-design-vue'
 
 const props = withDefaults(
@@ -84,18 +85,52 @@ const options = computed(() => {
     value: DataSourceType.COMPONENT,
     children: []
   } as any
+  const optionsGlobal = {
+    type: DataSourceType.GLOBAL,
+    label: '全局变量',
+    value: DataSourceType.GLOBAL,
+    children: []
+  } as any
+  const optionsFunction = {
+    type: DataSourceType.FUNCTION,
+    label: '函数脚本',
+    value: DataSourceType.FUNCTION,
+    children: [
+      {
+        value: 'function',
+        label: '函数',
+        children: []
+      },
+      {
+        value: 'script',
+        label: '脚本',
+        children: []
+      }
+    ]
+  } as any
 
-  let options = [optionsCustom, optionsVariable, optionsComponent]
+  let options = [optionsCustom, optionsVariable, optionsComponent, optionsGlobal, optionsFunction]
 
   //页面入参
-  let pageParams = store.pageConfig.config.pageParamsList
-  pageParams &&
-    pageParams.forEach((param: any) => {
-      optionsCustom.children.push({
-        label: param.operateHrefPageParamName,
-        value: param.operateHrefPageParamName
+  if (store.isPageDesigner) {
+    let pageParams = store.pageConfig.config.pageParamsList
+    pageParams &&
+      pageParams.forEach((param: any) => {
+        optionsCustom.children.push({
+          label: param.operateHrefPageParamName,
+          value: param.operateHrefPageParamName
+        })
       })
-    })
+  } else {
+    let pageParams = store.currentModalConfig.config.pageParamsList
+    pageParams &&
+      pageParams.forEach((param: any) => {
+        optionsCustom.children.push({
+          label: param.operateHrefPageParamName,
+          value: param.operateHrefPageParamName
+        })
+      })
+  }
 
   //页面变量
   let pageVariables = store.pageConfig.config.pageVariableList
@@ -108,85 +143,55 @@ const options = computed(() => {
     })
 
   //组件
-  store.inputComponentList.forEach((componentItem: any) => {
-    let childItem = {
-      label: componentItem.options.commonConfigAssignName,
-      value: componentItem.uuid,
-      children: []
-    } as any
-    optionsComponent.children.push(childItem)
-    //多输出组件
-    if (componentItem.type === 'van-design-tree' || componentItem.type === 'van-design-tree-select') {
-      childItem.children.push({
-        label: '选中数值',
-        value: 'value'
+  if (store.isPageDesigner) {
+    store.allInputComponentList.forEach((componentItem: any) => {
+      let childItem = {
+        label: componentItem.options.commonConfigAssignName,
+        value: componentItem.uuid,
+        children: []
+      } as any
+      optionsComponent.children.push(childItem)
+      //多输出组件
+      childItem.children = multiOutputValues(componentItem)
+    })
+  } else {
+    //弹窗里面,只允许选择本弹窗和父页面的组件
+    let modalInputComps = store.currentInputComponentList
+    modalInputComps.forEach((componentItem: any) => {
+      let childItem = {
+        label: componentItem.options.commonConfigAssignName,
+        value: componentItem.uuid,
+        children: []
+      } as any
+      optionsComponent.children.push(childItem)
+      //多输出组件
+      childItem.children = multiOutputValues(componentItem)
+    })
+  }
+
+  //全局变量
+  let globalList = store.globalVariableList
+  globalList &&
+    globalList.forEach((group: any) => {
+      let groupOption = {
+        type: DataSourceType.GLOBAL,
+        label: group.scopeName,
+        value: group.scopeId,
+        children: [] as any[]
+      }
+      group.children.forEach((variable: any) => {
+        groupOption.children.push({
+          type: DataSourceType.GLOBAL,
+          label: variable.variableKey,
+          value: variable.variableKey
+        })
       })
-      childItem.children.push({
-        label: '选中名称',
-        value: 'label'
-      })
-    } else if (componentItem.type === 'van-design-table') {
-      childItem.children.push({
-        label: '选定行数据',
-        value: 'rowdata'
-      })
-      childItem.children.push({
-        label: '每页行数',
-        value: 'rownum'
-      })
-      childItem.children.push({
-        label: '当前页号',
-        value: 'pagenum'
-      })
-    } else if (componentItem.type === 'van-design-workflow') {
-      childItem.children.push({
-        label: '待审批人',
-        value: 'pendingUser'
-      })
-      childItem.children.push({
-        label: '审核人（上个节点）',
-        value: 'approvedUser'
-      })
-      childItem.children.push({
-        label: '审核意见（上个节点）',
-        value: 'approvedAdvice'
-      })
-      childItem.children.push({
-        label: '发起人ID',
-        value: 'startUser'
-      })
-    } else if (componentItem.type === 'van-design-calendar-range') {
-      childItem.children.push({
-        label: '日期范围',
-        value: 'value'
-      })
-      childItem.children.push({
-        label: '开始日期',
-        value: 'startDate'
-      })
-      childItem.children.push({
-        label: '结束日期',
-        value: 'endDate'
-      })
-    } else if (componentItem.type === 'van-design-wechat-login') {
-      childItem.children.push({
-        label: '手机号,openid,unionid',
-        value: 'value'
-      })
-      childItem.children.push({
-        label: '手机号',
-        value: 'phoneNumber'
-      })
-      childItem.children.push({
-        label: 'openid',
-        value: 'openid'
-      })
-      childItem.children.push({
-        label: 'unionid',
-        value: 'unionid'
-      })
-    }
-  })
+      optionsGlobal.children.push(groupOption)
+    })
+
+  //函数脚本
+  optionsFunction.children[0].children = renameFunctionItem(store.functionList)
+  optionsFunction.children[1].children = renameFunctionItem(store.scriptList)
 
   return options
 })
@@ -262,7 +267,6 @@ function onChange(values: any, selectedOptions: any) {
             props.paramItem.param_v_key = selectedOptions[4].value
           }
         }
-      } else {
       }
     }
   }

@@ -22,10 +22,7 @@ export default {
   computed: {
     chartWidth() {
       {
-        const margin =
-          this.options.commonConfig.leftSpaceDistance +
-          this.options.commonConfig.rightSpaceDistance +
-          'px'
+        const margin = this.options.commonConfig.leftSpaceDistance + this.options.commonConfig.rightSpaceDistance + 'px'
         let width = this.options.commonConfigCompWidth + this.options.commonConfigCompWidthUnit
         if (this.options.commonConfigCompWidthUnit == 'auto') {
           return `calc(100% - ${margin})`
@@ -75,9 +72,19 @@ export default {
             value: dataItem[metrics]
           })
         })
+        let centerX = options.centerX === undefined ? 50 : options.centerX
+        let centerY = options.centerY === undefined ? 50 : options.centerY
         let metricItem = {
           name: metrics,
           type: 'pie',
+          label: {
+            show: options.labelShow,
+            fontSize: options.labelFontSize,
+            color: options.labelColor || '#000'
+          },
+          padAngle: options.padAngle === undefined ? 0 : options.padAngle,
+          radius: (options.radius === undefined ? 70 : options.radius) + '%',
+          center: [centerX + '%', centerY + '%'],
           data: sList
         }
         echartsOption.series.push(metricItem)

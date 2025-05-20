@@ -1,0 +1,12 @@
+{
+  "token": {
+    "colorPrimary": "#1677ff",
+    "fontSize": 14,
+    "borderRadius": 6,
+    "fontSizeHeading1": 38,
+    "fontSizeHeading2": 30,
+    "fontSizeHeading3": 24,
+    "fontSizeHeading4": 20,
+    "fontSizeHeading5": 16
+  }
+}

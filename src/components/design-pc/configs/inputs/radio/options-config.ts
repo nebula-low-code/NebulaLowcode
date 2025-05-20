@@ -24,6 +24,8 @@ export default {
     }
   ], // 默认选项
   disabled: false,
+  radioStyleType: 'round',
+  size: 'default',
   labelKey: '',
   valueKey: '',
   contentDataSource: 'radio-button-default',

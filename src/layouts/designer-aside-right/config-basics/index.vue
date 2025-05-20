@@ -29,6 +29,7 @@ import ConfigComponent from './config-component.vue'
 import ConfigEvent from './config-event.vue'
 import ConfigCommonStyle from './config-common-style.vue'
 import ConfigPageStyle from './config-page-style.vue'
+import ConfigBGStyle from './config-bg-style.vue'
 import ConfigPageParam from './config-page-param.vue'
 
 const store = useDataStore()

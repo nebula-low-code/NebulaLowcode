@@ -6,6 +6,15 @@ const formatTypeListGenerator = f.compose(
   f.keys
 )
 
+export const FontSizeType = {
+  HEADING1: 'HEADING1',
+  HEADING2: 'HEADING2',
+  HEADING3: 'HEADING3',
+  HEADING4: 'HEADING4',
+  HEADING5: 'HEADING5',
+  NORMAL: 'NORMAL'
+}
+
 export const FormatType = {
   NORMAL_TEXT: 'NORMAL_TEXT',
   NUM_THOUSAND: 'NUM_THOUSAND',

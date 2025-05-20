@@ -12,17 +12,23 @@
         <a-switch size="mini" v-model:checked="props.columnItem.isEditField" @change="onChangeIsEdit"></a-switch>
       </a-form-item>
       <a-form-item label="编辑类型：" v-if="props.columnItem.isEditField">
-        <a-radio-group size="mini" v-model:value="props.columnItem.editType" @change="onChangeEditType">
+        <a-select v-model:value="props.columnItem.editType" @change="onChangeEditType">
+          <a-select-option value="input">文本输入框</a-select-option>
+          <a-select-option value="number">数字输入框</a-select-option>
+          <a-select-option value="date">日期</a-select-option>
+          <a-select-option value="select">下拉框</a-select-option>
+        </a-select>
+        <!-- <a-radio-group size="mini" v-model:value="props.columnItem.editType" @change="onChangeEditType">
           <a-radio-button value="input">输入框</a-radio-button>
           <a-radio-button value="date">日期</a-radio-button>
           <a-radio-button value="select">下拉框</a-radio-button>
-        </a-radio-group>
+        </a-radio-group> -->
       </a-form-item>
       <a-form-item label="多选：" v-if="props.columnItem.isEditField && props.columnItem.editType == 'select'">
         <a-switch size="mini" v-model:checked="props.columnItem.selectConfig.isMultiple"></a-switch>
       </a-form-item>
       <a-form-item label="选项数据：" v-if="props.columnItem.isEditField && props.columnItem.editType == 'select'">
-        <ValueOptions :options="props.columnItem.selectConfig" :hide-dic="true"></ValueOptions>
+        <ValueOptions :options="props.columnItem.selectConfig" ></ValueOptions>
       </a-form-item>
       <div v-if="props.columnItem.isEditField" class="event-div" @click="eventConfirmClick()">
         <i class="event-icon iconfont iconbiangengguanli" />
@@ -43,6 +49,14 @@
           <a-select-option value="pic">图片</a-select-option>
           <a-select-option value="color">颜色</a-select-option>
           <a-select-option value="file">文件</a-select-option>
+          <a-select-option value="link">超链接</a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item label="链接：" v-if="state.valueType == 'link'">
+        <a-select v-model:value="state.linkValue" placeholder="请选择链接" key="maxValue" @change="onColunmChange" allowClear>
+          <a-select-option v-for="item in tableFieldList" :value="item.columnName">
+            {{ item.columnName }}
+          </a-select-option>
         </a-select>
       </a-form-item>
       <a-form-item label="格式化：" v-if="state.valueType == 'value'">
@@ -64,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineComponent, computed, reactive, onMounted,watch } from 'vue'
+import { ref, defineComponent, computed, reactive, onMounted, watch } from 'vue'
 import { useDataStore } from '@/stores'
 import draggable from 'vuedraggable'
 import DataValueSelect from '@/components/data-value-select/index.vue'
@@ -74,6 +88,7 @@ import { generateUUID } from '@/utils/uuid'
 import { deleteAuthorityService, saveAuthorityService } from '@/api/api'
 import ValueOptions from '@/components/common-data-config/options-config.vue'
 import { columnFormatTypeList } from '@/utils/constants.ts'
+import { isNetworkDatasource } from '@/utils/string-utils'
 const store = useDataStore()
 const options = computed(() => store.currentCheckedComponent.options)
 let specialColumnsConfigs = options.value.specialColumnsConfigs
@@ -83,6 +98,7 @@ const props = defineProps<{
 let state = reactive({
   valueType: '',
   textFormat: '',
+  linkValue: '',
   selectConfig: {
     labelKey: '',
     valueKey: '',
@@ -95,12 +111,35 @@ const permissionChecked = computed(() => {
   let uuid = specialColumnsConfigs[props.columnItem.colIndex][0].specialUUID
   return store.permissionList.includes(uuid)
 })
+const tableFieldList = computed(() => {
+  if (isNetworkDatasource(options.value.contentDataSource)) {
+    return initTableFieldList(options.value.interfaceDataConfig.uuid, options.value.interfaceDataConfig.key)
+  }
+  return []
+})
+function initTableFieldList(operateApiId: any, key: any) {
+  let interfaceData = store.interfaceDataById(operateApiId)
+  let tableFieldList = []
+  if (interfaceData) {
+    let respList = interfaceData.data.responseData[key]
+    if (respList && respList.length > 0) {
+      let temp = respList[0]
+      for (let k in temp) {
+        tableFieldList.push({
+          columnName: k
+        })
+      }
+    }
+  }
+  return tableFieldList
+}
 const labelCol = { style: { width: '80px' } }
 watch(
   () => props.columnItem,
   () => {
     state.valueType = specialColumnsConfigs[props.columnItem.colIndex][0].valueType
     state.textFormat = specialColumnsConfigs[props.columnItem.colIndex][0].textFormat ? specialColumnsConfigs[props.columnItem.colIndex][0].textFormat : 'NORMAL_TEXT'
+    state.linkValue = specialColumnsConfigs[props.columnItem.colIndex][0].linkValue
   },
   {
     immediate: true
@@ -127,7 +166,8 @@ function onChangeEditType() {
       valueKey: '',
       contentDataSource: '',
       interfaceDataConfig: {},
-      defaultTableData: []
+      defaultTableData: [],
+      isMultiple:false
     }
   } else {
     delete props.columnItem.selectConfig
@@ -184,6 +224,11 @@ function eventConfirmClick() {
   store.curColumn = specialColumn
   //confirmEventList
   store.openEventDialog('confirm', 'column')
+}
+
+function onColunmChange(values) {
+  specialColumnsConfigs[props.columnItem.colIndex][0].linkValue = values
+  console.log('------onColunmChange---', specialColumnsConfigs[props.columnItem.colIndex][0])
 }
 </script>
 

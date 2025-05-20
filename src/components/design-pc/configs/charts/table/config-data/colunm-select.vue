@@ -1,5 +1,5 @@
 <template>
-  <a-select v-model:value="columnValue" mode="multiple" placeholder="请选择表格列" key="maxValue"  :max-tag-count="maxTagCount" @change="onColunmChange">
+  <a-select v-model:value="columnValue" mode="multiple" placeholder="请选择表格列" key="maxValue" :max-tag-count="maxTagCount" @change="onColunmChange">
     <a-select-option v-for="item in tableFieldList" :value="item.columnName">
       {{ item.columnName }}
     </a-select-option>
@@ -10,15 +10,16 @@
 import { ref, defineComponent, computed, reactive, onMounted } from 'vue'
 import { useDataStore } from '@/stores'
 import { generateUUID } from '@/utils/uuid'
+import { isNetworkDatasource } from '@/utils/string-utils'
 const store = useDataStore()
 
 const emit = defineEmits(['onChange'])
 
 const options = computed(() => store.currentCheckedComponent.options)
 let existOperateFlag = false
-const maxTagCount= ref(15);
+const maxTagCount = ref(15)
 const tableFieldList = computed(() => {
-  if (options.value.contentDataSource == 'radio-button-interface') {
+  if (isNetworkDatasource(options.value.contentDataSource)) {
     return initTableFieldList(options.value.interfaceDataConfig.uuid, options.value.interfaceDataConfig.key)
   }
   return []
@@ -27,16 +28,15 @@ function initTableFieldList(operateApiId: any, key: any) {
   let interfaceData = store.interfaceDataById(operateApiId)
   let tableFieldList = []
   if (interfaceData) {
-  
-      let respList = interfaceData.data.responseData[key]
-      if (respList&&respList.length > 0) {
-        let temp = respList[0]
-        for (let k in temp) {
-          tableFieldList.push({
-            columnName: k
-          })
-        }
+    let respList = interfaceData.data.responseData[key]
+    if (respList && respList.length > 0) {
+      let temp = respList[0]
+      for (let k in temp) {
+        tableFieldList.push({
+          columnName: k
+        })
       }
+    }
   }
   return tableFieldList
 }

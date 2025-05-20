@@ -1,6 +1,7 @@
 export default {
   value: undefined,
   width: 80,
+  outputLabel: undefined,
   label: '标题',
   enLabel: '',
   labelAlign: 'right',
@@ -14,7 +15,21 @@ export default {
   required: false,
   disabled: false,
   columns: [],
-  defaultTableData: [] as any[], // 静态选项
+  defaultTableData: [
+    {
+      label: '选项1',
+      value: '1'
+    },
+    {
+      label: '选项2',
+      value: '2'
+    },
+    {
+      label: '选项3',
+      value: '3'
+    }
+  ], // 默认选项
+  dropdownWidth: undefined, //下拉菜单宽度
   contentDataSource: 'radio-button-default',
   contentDataEcho: '',
   interfaceDataConfig: {
@@ -27,5 +42,11 @@ export default {
     uuid: '',
     key: ''
   },
-  dicId: ''
+  interfaceSearchEchoConfig:{
+    uuid: '',
+    key: ''
+  },
+  dicId: '',
+  commonConfigAssignIsCol: false,
+  interfaceSearch:false
 }

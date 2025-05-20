@@ -5,6 +5,9 @@
 import { computed } from 'vue'
 import { useDataStore } from '@/stores'
 import { DataSourceType } from '@/utils/constants'
+import { multiOutputValues } from '@/utils/multi-output-component'
+import { isPlainObject } from 'lodash'
+import { isNetworkDatasource } from '@/utils/string-utils'
 
 const props = defineProps<{
   componentOptions: any
@@ -27,7 +30,7 @@ const echoCascadeValue = computed(() => {
     return props.paramItem.echoValues
   }
   let echoValues: any[] = []
-  let interfaceDataConfig = props.paramItem
+  let interfaceDataConfig = props.paramItem || { versions: '1.0.0' }
 
   let contentDataSource = props.componentOptions.contentDataSource
   if (props.echoConfig) {
@@ -95,6 +98,12 @@ const options = computed(() => {
     value: DataSourceType.COMPONENT,
     children: []
   } as any
+  const optionsGlobal = {
+    type: DataSourceType.GLOBAL,
+    label: '全局变量',
+    value: DataSourceType.GLOBAL,
+    children: []
+  } as any
   let options = []
   if (!props.hidePageParam) {
     options.push(optionsCustom)
@@ -105,16 +114,30 @@ const options = computed(() => {
   if (!props.hideComponent) {
     options.push(optionsComponent)
   }
+  if (!props.hideGlobal) {
+    options.push(optionsGlobal)
+  }
 
   //页面入参
-  let pageParams = store.pageConfig.config.pageParamsList
-  pageParams &&
-    pageParams.forEach((param: any) => {
-      optionsCustom.children.push({
-        label: param.operateHrefPageParamName,
-        value: param.operateHrefPageParamName
+  if (store.isPageDesigner) {
+    let pageParams = store.pageConfig.config.pageParamsList
+    pageParams &&
+      pageParams.forEach((param: any) => {
+        optionsCustom.children.push({
+          label: param.operateHrefPageParamName,
+          value: param.operateHrefPageParamName
+        })
       })
-    })
+  } else {
+    let pageParams = store.currentModalConfig.config.pageParamsList
+    pageParams &&
+      pageParams.forEach((param: any) => {
+        optionsCustom.children.push({
+          label: param.operateHrefPageParamName,
+          value: param.operateHrefPageParamName
+        })
+      })
+  }
 
   //页面变量
   let pageVariables = store.pageConfig.config.pageVariableList
@@ -127,107 +150,83 @@ const options = computed(() => {
     })
 
   //组件
-  store.inputComponentList.forEach((componentItem: any) => {
-    let childItem = {
-      label: componentItem.options.commonConfigAssignName,
-      value: componentItem.uuid,
-      children: []
-    } as any
-    optionsComponent.children.push(childItem)
-    //多输出组件
-    if (componentItem.type === 'van-design-tree' || componentItem.type === 'van-design-tree-select') {
-      childItem.children.push({
-        label: '选中数值',
-        value: 'value'
-      })
-      childItem.children.push({
-        label: '选中名称',
-        value: 'label'
-      })
-    } else if (componentItem.type === 'van-design-table') {
-      childItem.children.push({
-        label: '选定行数据',
-        value: 'rowdata'
-      })
-      childItem.children.push({
-        label: '每页行数',
-        value: 'rownum'
-      })
-      childItem.children.push({
-        label: '当前页号',
-        value: 'pagenum'
-      })
-    } else if (componentItem.type === 'van-design-workflow') {
-      childItem.children.push({
-        label: '待审批人',
-        value: 'pendingUser'
-      })
-      childItem.children.push({
-        label: '审核人（上个节点）',
-        value: 'approvedUser'
-      })
-      childItem.children.push({
-        label: '审核意见（上个节点）',
-        value: 'approvedAdvice'
-      })
-      childItem.children.push({
-        label: '发起人ID',
-        value: 'startUser'
-      })
-    } else if (componentItem.type === 'van-design-calendar-range') {
-      childItem.children.push({
-        label: '日期范围',
-        value: 'value'
-      })
-      childItem.children.push({
-        label: '开始日期',
-        value: 'startDate'
-      })
-      childItem.children.push({
-        label: '结束日期',
-        value: 'endDate'
-      })
-    } else if (componentItem.type === 'van-design-wechat-login') {
-      childItem.children.push({
-        label: '手机号,openid,unionid',
-        value: 'value'
-      })
-      childItem.children.push({
-        label: '手机号',
-        value: 'phoneNumber'
-      })
-      childItem.children.push({
-        label: 'openid',
-        value: 'openid'
-      })
-      childItem.children.push({
-        label: 'unionid',
-        value: 'unionid'
-      })
+  if (store.isPageDesigner) {
+    store.allInputComponentList.forEach((componentItem: any) => {
+      let childItem = {
+        label: componentItem.options.commonConfigAssignName,
+        value: componentItem.uuid,
+        children: []
+      } as any
+      optionsComponent.children.push(childItem)
+      //多输出组件
+      childItem.children = multiOutputValues(componentItem)
+    })
+  } else {
+    //弹窗里面,只允许选择本弹窗和父页面的组件
+    let modalInputComps = store.currentInputComponentList
+    modalInputComps.forEach((componentItem: any) => {
+      let childItem = {
+        label: componentItem.options.commonConfigAssignName,
+        value: componentItem.uuid,
+        children: []
+      } as any
+      optionsComponent.children.push(childItem)
+      //多输出组件
+      childItem.children = multiOutputValues(componentItem)
+    })
+  }
+
+  //全局变量
+  let globalList = store.globalVariableList
+  globalList.forEach((group: any) => {
+    let groupOption = {
+      type: DataSourceType.GLOBAL,
+      label: group.scopeName,
+      value: group.scopeId,
+      children: [] as any[]
     }
+    group.children.forEach((variable: any) => {
+      groupOption.children.push({
+        type: DataSourceType.GLOBAL,
+        label: variable.variableKey,
+        value: variable.variableKey
+      })
+    })
+    optionsGlobal.children.push(groupOption)
   })
 
   //接口
   if (!props.hideInterface) {
-    let interfaceList: any[] = store.interfaceList
+    let interfaceList = store.interfaceList
     for (const interfaceItem of interfaceList) {
       const childrenData = []
       const responseData = interfaceItem.data.responseData || {}
       for (const key in responseData) {
         if (Object.prototype.hasOwnProperty.call(responseData, key)) {
-          childrenData.push({
+          let childrenDataItem = {
             label: key,
             value: key
-          })
-          // const responseDataItem = responseData[key]
-          // childrenData.push({
-          //   label: key,
-          //   value: responseDataItem
-          // })
+          } as any
+          childrenData.push(childrenDataItem)
+
+          //如果字段是对象,继续解析里面的字段
+          const responseDataItem = responseData[key]
+          if (isPlainObject(responseDataItem)) {
+            const childrenData2 = []
+            for (const key2 in responseDataItem) {
+              if (Object.prototype.hasOwnProperty.call(responseDataItem, key2)) {
+                childrenData2.push({
+                  label: key2,
+                  value: key2
+                })
+              }
+            }
+            childrenDataItem.children = childrenData2
+          }
         }
       }
       const optionsInterface = {
-        type: DataSourceType.INTERFACE,
+        type: interfaceItem.type,
         label: interfaceItem.data.name,
         value: interfaceItem.id,
         data: interfaceItem.data,
@@ -245,13 +244,16 @@ const options = computed(() => {
  * 级联选择各组件的层级判断
  *
  * 页面入参数据最多两层
- * 组件数据两到三层
- * 后端服务三到四层
+ * 组件数据两到三层(三层为多输出组件)
+ * 后端服务两到三层(三层代表字段为object)
  * 函数脚本四到五层
  */
 function onChange(values: any, selectedOptions: any) {
-  // console.log('---values---', values)
-  // console.log('---selectedOptions---', selectedOptions)
+  console.log('---values---', values)
+  console.log('---selectedOptions---', selectedOptions)
+  if (!props.paramItem) {
+    return
+  }
   props.paramItem.echoValues = values
 
   //先删除,避免带出上次的无用属性
@@ -262,6 +264,7 @@ function onChange(values: any, selectedOptions: any) {
   delete props.paramItem.uuid
   delete props.paramItem.scope
   delete props.paramItem.key
+  delete props.paramItem.middle
   delete props.paramItem.paramsConfigs
   if (selectedOptions && selectedOptions.length > 0) {
     const dataSourceType = selectedOptions[0].type
@@ -280,14 +283,18 @@ function onChange(values: any, selectedOptions: any) {
         props.paramItem.key = selectedOptions[1].value
         props.paramItem.output = selectedOptions[2].value
       }
-    } else if (dataSourceType === DataSourceType.INTERFACE || dataSourceType === DataSourceType.CONNECT) {
+    } else if (isNetworkDatasource(dataSourceType)) {
       //接口
       props.paramItem.id = selectedOptions[0].data.id
       props.paramItem.uuid = selectedOptions[0].value
       props.paramItem.name = selectedOptions[0].label
       props.paramItem.paramsConfigs = selectedOptions[0].data.paramsConfigs
-      if (selectedOptions.length > 1) {
+      if (selectedOptions.length === 2) {
         props.paramItem.key = selectedOptions[1].label
+      }
+      if (selectedOptions.length === 3) {
+        props.paramItem.middle = selectedOptions[1].label
+        props.paramItem.key = selectedOptions[2].label
       }
       // props.paramItem.value = selectedOptions[1].value
     } else if (dataSourceType === DataSourceType.CUSTOM) {

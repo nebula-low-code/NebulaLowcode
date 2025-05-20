@@ -11,13 +11,11 @@
         </a-tooltip>
       </div>
       <div>
-        <a-button type="link" style="padding-right: 3px" @click="openInterfaceModal">添加</a-button>
         <a-button type="link" @click="addMockData">MOCK</a-button>
       </div>
     </div>
 
     <!-- Modal -->
-    <AddInterfaceModal ref="interfaceModalRef" />
     <AddMockModal ref="mockModalRef" :use-mock-data="useMockData" />
     <!-- 接口列表 -->
     <a-collapse :bordered="false" v-model:activeKey="activeKey" expandIconPosition="right" style="min-height: 260px; background-color: white">
@@ -68,7 +66,6 @@
 import { ref, computed } from 'vue'
 import { useDataStore } from '@/stores'
 
-import AddInterfaceModal from './modal/add-interface.vue'
 import AddMockModal from './modal/add-mock.vue'
 import InterfaceDataConfig from './config-interface.vue'
 import ConfigComponent from './config-component.vue'

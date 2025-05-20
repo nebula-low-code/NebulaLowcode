@@ -16,6 +16,7 @@
           <a-radio-button value="right">向右</a-radio-button>
         </a-radio-group>
       </a-form-item>
+      <div class="event-div-col" @click="onClickChildren()">表格子列</div>
     </a-form>
   </div>
 </template>
@@ -134,6 +135,12 @@ function eventConfirmClick() {
   //confirmEventList
   store.openEventDialog('confirm', 'column')
 }
+
+function onClickChildren(){
+    console.log('onClickChildren',props.columnItem)
+    store.curColumn = props.columnItem
+    store.showTableColumnSubChildrenConfig();
+}
 </script>
 
 <style lang="less" scoped>
@@ -161,5 +168,21 @@ function eventConfirmClick() {
 .event-icon {
   font-size: 12px;
   margin: 0 10px;
+}
+.event-div-col {
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
+  width: 30%;
+  align-items: center;
+  color: #666;
+  border: 1px solid #e5e6e8;
+  border-radius: 6px;
+  padding: 0 8px;
+  height: 36px;
+  &:hover {
+    color: #409eff;
+    border: 1px dashed #409eff;
+  }
 }
 </style>

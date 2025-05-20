@@ -1,7 +1,7 @@
 export const chartsThemeList = [
   {
     name: '自定义',
-    type: '#0780cf,#765005,#fa6d1d,#0e2c82,#b6b51f,#da1f18'
+    type: '#0780cf,#765005,#fa6d1d,#0e2c82,#b6b51f,#da1f18,#701866,#f47a75,#009db2,#024b51'
   },
   {
     name: '复古',

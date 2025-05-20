@@ -1,6 +1,6 @@
 <template>
   <a-form style="margin-right: 8px" labelAlign="right" :label-col="{ span: 6 }" :colon="false" autocomplete="off">
-    <a-form-item label="值配置">
+    <a-form-item label="组件设值">
       <DataValueSelect :component-options="options" :param-item="options.interfaceDataConfig" />
     </a-form-item>
   </a-form>

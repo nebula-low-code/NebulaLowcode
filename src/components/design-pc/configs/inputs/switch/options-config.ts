@@ -11,5 +11,6 @@ export default {
   contentDataSource: 'radio-button-default',
   interfaceDataConfig: {
     versions: '1.0.0'
-  }
+  },
+  commonConfigAssignIsCol: false
 }

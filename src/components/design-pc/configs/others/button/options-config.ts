@@ -1,3 +1,5 @@
+import { useThemeStore } from '@/stores'
+const themeStore = useThemeStore()
 export default {
   version: '1.0.0',
   value: '',
@@ -15,14 +17,15 @@ export default {
   enText: '',
 
   // 颜色
-  backgroundColor: '#1677ff',
+  // backgroundColor: '#1677ff',
+  backgroundColor: themeStore.themeConfig.token.colorPrimary,
   color: '#FFFFFF',
-  activeBGColor: '#1677ffcc',
-  activeColor: '#FFFFFF',
-
   styleEditorConfig: {
-    textHtmlSize: 14
+    textHtmlSize: themeStore.themeConfig.token.fontSize
   },
+  themeChanged: {
+    fontSize: false
+  }, //是否修改过默认样式
   block: false,
   commonConfig: {
     topPaddingDistance: 8,
@@ -31,5 +34,6 @@ export default {
     rightPaddingDistance: 16,
     borderStyle: {} as any,
     shadow: ''
-  }
+  },
+  commonConfigAssignIsCol: false
 }

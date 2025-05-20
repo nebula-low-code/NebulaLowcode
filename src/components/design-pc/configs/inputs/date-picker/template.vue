@@ -3,6 +3,7 @@
     <label
       :class="options.required ? 'required' : ''"
       :style="{
+        fontSize: themeConfig.token.fontSize + 'px',
         width: options.labelAlign == 'top' ? '100%' : options.width + 'px',
         display: options.labelShow ? '' : 'none',
         textAlign: options.labelAlign == 'top' ? 'left' : options.labelAlign as 'left' | 'center' | 'right',
@@ -12,10 +13,15 @@
       {{ options.label }}
     </label>
     <a-date-picker
+      style="width: 100%"
       :size="options.size"
       :placeholder="options.placeholder"
       :disabled="options.disabled"
       :allowClear="options.clearable"
+      :show-time="options.format === 'datetime'"
+      :format="format"
+      :picker="options.format === 'year-month' ? 'month' : 'date'"
+      :style="disableStyle"
       :disabledDate="disabledDate"
       :defaultPickerValue="defaultValue"
       :value="value"
@@ -27,8 +33,10 @@
 <script lang="ts">
 import optionsConfig from './options-config'
 import dayjs from 'dayjs'
-import { mapActions } from 'pinia'
+import { mapActions, mapState } from 'pinia'
+import { useThemeStore } from '@/stores'
 import { useDataStore } from '@/stores'
+import { getComponentEchoValue } from '@/utils/component-value'
 
 export default {
   name: 'nebula-component-date-picker',
@@ -39,6 +47,15 @@ export default {
     }
   },
   computed: {
+    ...mapState(useThemeStore, ['themeConfig']),
+    disableStyle() {
+      if (this.options.disabled) {
+        return {
+          pointerEvents: 'none'
+        }
+      }
+      return {}
+    },
     flexStyle() {
       if (this.options.labelAlign != 'top') {
         return {
@@ -69,18 +86,27 @@ export default {
       return tempValue.length > 0 ? dayjs(tempValue) : null
     },
     defaultValue() {
-      if (this.options.interfaceDataEchoConfig.uuid && this.options.interfaceDataEchoConfig.uuid.length > 0) {
-        let interfaceData = this.interfaceDataById(this.options.interfaceDataEchoConfig.uuid)
-        if (interfaceData) {
-          let resp = interfaceData.data.responseData
-          if (resp) {
-            let resValue = resp[this.options.interfaceDataEchoConfig.key]
-            this.options.value = resValue
-            return resValue.length > 0 ? dayjs(resValue) : null
-          }
-        }
+      let val = getComponentEchoValue(this.options, this.options.value)
+      if (val) {
+        return val.length > 0 ? dayjs(val) : null
       }
       return this.options.value.length > 0 ? dayjs(this.options.value) : null
+    },
+    format() {
+      let formatType = this.options.format
+      if (!this.options.format) {
+        formatType = 'date'
+      }
+      let format = 'YYYY-MM-DD'
+      if (formatType === 'date') {
+        format = 'YYYY-MM-DD'
+      } else if (formatType === 'year-month') {
+        format = 'YYYY-MM'
+      } else if (formatType === 'datetime') {
+        format = 'YYYY-MM-DD HH:mm:ss'
+      }
+
+      return format
     }
   },
   mounted() {

@@ -65,14 +65,23 @@
     </a-form-item>
     <div class="page-config-div">表格数据选择</div>
     <a-form-item label="选中列值：">
-      <a-select v-model:value="options.rowSelectKey" allowClear placeholder="选择列值">
+      <a-select v-model:value="options.rowSelectKey" allowClear placeholder="选择列值" @change="onRowSelectChange">
         <a-select-option v-for="item in state.tableFieldList" :value="item.columnName">
           {{ item.columnName }}
         </a-select-option>
       </a-select>
+     
+    </a-form-item>
+    <a-form-item label="是否可选择" v-if="options.rowSelectKey">
+      <!-- <a-switch v-model:checked="options.rowSelectSingleSwitch"></a-switch> -->
+      <a-select v-model:value="options.rowSelectMethod" placeholder="选择列值">
+        <a-select-option value="none">不显示</a-select-option>
+        <a-select-option value="single">单选</a-select-option>
+        <a-select-option value="multiple">多选</a-select-option>
+      </a-select>
     </a-form-item>
     <a-form-item label="回显配置：">
-      <StatusValueSelect
+      <!-- <StatusValueSelect
         :echoValue="options.echoRowKey_id"
         :hideComponent="true"
         :hidePageParam="true"
@@ -81,11 +90,45 @@
         :param-item="options.echoRowConfig"
         style="width: 215px"
         @onChange="onRowEchoSelectChange"
-      ></StatusValueSelect>
+      ></StatusValueSelect> -->
+      <DataValueSelect
+        :component-options="options"
+        :param-item="options.echoRowConfig"
+        :hide-page-param="true"
+        :hide-page-variable="true"
+        :hide-component="true"
+        :hide-global="true"
+        @onChange="onRowEchoSelectChange"
+        style="width: 215px"
+      />
     </a-form-item>
-    <a-form-item label="合计配置：">
-      <DataValueSelect :component-options="options" :param-item="options.summaryRowConfig" @onChange="onRowSummarySelectChange" />
+    <a-form-item label="合计：">
+      <div style="display: flex; align-items: center">
+        <a-switch v-model:checked="options.isSum"></a-switch>
+          <a-tooltip>
+            <template #title>
+              <span>打开合计后，不能配置选中行，不然会导致合计行错位</span>
+            </template>
+            <QuestionCircleOutlined style="margin-left: 5px" />
+          </a-tooltip>
+        </div>
     </a-form-item>
+    <a-form-item label="合计配置：" v-if="options.isSum">
+      <a-radio-group size="mini" v-model:value="options.summaryType" button-style="solid" style="margin-bottom: 10px">
+        <a-radio-button value="interface">接口合计</a-radio-button>
+        <a-radio-button value="column">前端合计</a-radio-button>
+      </a-radio-group>
+
+      <DataValueSelect :component-options="options" :param-item="options.summaryRowConfig" v-if="options.summaryType == 'interface'" @onChange="onRowSummarySelectChange" />
+      <a-select v-model:value="options.summaryRowList" mode="multiple" placeholder="选择需要合计的列" v-if="options.summaryType == 'column'">
+        <a-select-option v-for="item in summaryFieldList" :value="item.columnName">
+          {{ item.columnName }}
+        </a-select-option>
+      </a-select>
+    </a-form-item>
+    <!-- <a-form-item label="合计配置：">
+      
+    </a-form-item> -->
 
     <!-- 一维数组树形显示 -->
     <a-form-item label="树形显示：">
@@ -119,6 +162,9 @@
         </a-select>
       </a-form-item>
     </div>
+    <a-form-item label="左侧固定：">
+      <a-input-number v-model:value="options.leftFixedIndex" :min="0" addon-after="列" />
+    </a-form-item>
   </a-form>
 </template>
 
@@ -129,9 +175,17 @@ import draggable from 'vuedraggable'
 import DataValueSelect from '@/components/data-value-select/index.vue'
 import StatusValueSelect from '@/layouts/designer-aside-right/config-status/status-left/config-status/status-value-select/index.vue'
 import ColumnSelect from './colunm-select.vue'
-
+import { QuestionCircleOutlined } from '@ant-design/icons-vue'
 const store = useDataStore()
 const options = computed(() => store.currentCheckedComponent.options)
+const summaryFieldList = computed(() => {
+    let temp=[]
+    // 合计的列，必须是表格选择的列
+    options.value.columnsConfigList.filter((item: any) => {
+      temp.push({columnName:item.dataIndex})
+    })
+    return temp;
+})
 let state = reactive({
   tableFieldList: [] as any,
   columnValue: [] as any,
@@ -184,11 +238,11 @@ function onPageSelectChange(selectedOptions: any) {
 function onRowEchoSelectChange(selectedOptions: any) {
   console.log('---onRowEchoSelectChange----', selectedOptions)
 
-  options.value.echoRowKey_id = []
-  state.selectList = []
-  if (selectedOptions && selectedOptions.length == 2) {
-    options.value.echoRowKey_id = [selectedOptions[0].value, selectedOptions[1].value]
-  }
+  //   options.value.echoRowKey_id = []
+  //   state.selectList = []
+  //   if (selectedOptions && selectedOptions.length == 2) {
+  //     options.value.echoRowKey_id = [selectedOptions[0].value, selectedOptions[1].value]
+  //   }
 }
 function onRowSummarySelectChange(selectedOptions: any) {
   console.log('---onRowSummarySelectChange----', selectedOptions)
@@ -210,6 +264,11 @@ function handleOldVersion() {
   if (operateApiId) {
     initTableFieldList(operateApiId, options.value.interfaceDataConfig.key)
   }
+}
+function onRowSelectChange(value){
+    if(!value){
+        options.value.rowSelectMethod=""
+    }
 }
 onMounted(() => {
   //老版本回显处理

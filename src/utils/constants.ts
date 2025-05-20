@@ -1,15 +1,26 @@
+export const ENV = {
+  //   BASE_URL: 'http://localhost:40518/platform/api'
+  BASE_URL: 'https://api.xingyunzuo.com/platform/api',
+  RENDER_PC_URL: 'https://renderer.xingyunzuo.com',
+  RENDER_H5_URL: 'https://m2.xingyunzuo.com'
+}
+
 export const DataSourceType = {
   DEFAULT: 'radio-button-default',
   INTERFACE: 'radio-button-interface',
   CONNECT: 'radio-button-connect',
+  DATABASE: 'radio-button-database',
+  SQL: 'radio-button-sql',
   CUSTOM_INTERFACE: 'customInterface',
   BIND: 'radio-button-bind',
   COMPONENT: 'component',
+  COMPONENT_OBJECT: 'component-object',
   CUSTOM: 'custom',
   VARIABLE: 'variable',
   GLOBAL: 'global',
   FUNCTION: 'function',
-  EVENT: 'event'
+  EVENT: 'event',
+  DIFY: 'radio-button-dify'
 }
 
 export const EventType = {
@@ -32,11 +43,22 @@ export const EventType = {
   DISABLE: 'event-operate-disable',
   PRINT: 'event-operate-print',
   EXPORT: 'event-operate-export',
+  TEMPLATE_EXPORT: 'event-operate-template-export',
   IMPORT: 'event-operate-import'
 }
 
 export const WorkflowOutputs = ['pendingUser', 'approvedUser', 'approvedAdvice', 'startUser']
-export const CustomEventsType = [] //需要在取值中能获取到的事件类型,主要是移动端的事件,如扫码/微信登录等
+export const CustomEventsType = [
+  'event-operate-scan',
+  'event-operate-wxlogin',
+  'event-operate-wxQyLogin',
+  'event-operate-openid',
+  'event-operate-token-get',
+  'event-operate-map',
+  'event-operate-iam-code',
+  'event-operate-get-language',
+  'event-data-insert'
+] //需要在取值中能获取到的事件类型,主要是移动端的事件,如扫码/微信登录等
 
 export const columnFormatTypeList = [
   {

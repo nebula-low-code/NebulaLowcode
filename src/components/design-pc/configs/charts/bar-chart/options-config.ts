@@ -1,6 +1,7 @@
 export default {
   value: '',
   legendAlign: 'top',
+  label: 'none',
   commonConfigCompWidthUnit: '%',
   commonConfigCompWidth: '100',
   commonConfigCompHeightUnit: 'px',
@@ -59,20 +60,7 @@ export default {
   chartPEvents: {},
   // 配置
   contentDataSource: 'radio-button-default',
-  chartColors: [
-    '#63b2ee',
-    '#76da91',
-    '#f8cb7f',
-    '#f89588',
-    '#7cd6cf',
-    '#9192ab',
-    '#7898e1',
-    '#efa666',
-    '#eddd86',
-    '#9987ce',
-    '#63b2ee',
-    '#76da91'
-  ],
+  chartColors: ['#63b2ee', '#76da91', '#f8cb7f', '#f89588', '#7cd6cf', '#9192ab', '#7898e1', '#efa666', '#eddd86', '#9987ce', '#63b2ee', '#76da91'],
   echartsOptions: {
     color: [],
     dataset: [

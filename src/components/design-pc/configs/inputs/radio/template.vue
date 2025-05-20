@@ -3,6 +3,7 @@
     <label
       :class="options.required ? 'required' : ''"
       :style="{
+        fontSize: themeConfig.token.fontSize + 'px',
         display: options.labelShow ? '' : 'none',
         width: options.labelAlign == 'top' ? '100%' : options.width + 'px',
         textAlign: options.labelAlign == 'top' ? 'left' : options.labelAlign as 'left' | 'center' | 'right',
@@ -11,22 +12,31 @@
       {{ options.label }}
     </label>
     <div style="flex: 1">
-      <a-radio-group v-if="options.contentDataSource === 'radio-button-dictionary'" style="vertical-align: middle" v-model:value="options.value" :icon-size="16" :disabled="options.disabled">
-        <a-radio shape="square" :value="item.entryCode" v-for="(item, key) in extraData.dicData" :key="item.entryCode">
-          {{ item.entryName }}
-        </a-radio>
+      <a-radio-group v-if="options.contentDataSource === 'radio-button-dictionary'" :size="options.size" style="vertical-align: middle" v-model:value="options.value" :disabled="options.disabled">
+        <template v-for="(item, key) in extraData.dicData" :key="item.entryCode">
+          <a-radio-button v-if="options.radioStyleType === 'button'" style="padding: 0 12px" :value="item.entryCode">
+            {{ item.entryName }}
+          </a-radio-button>
+          <a-radio v-else :value="item.entryCode">
+            {{ item.entryName }}
+          </a-radio>
+        </template>
       </a-radio-group>
-      <a-radio-group v-else style="vertical-align: middle" v-model:value="options.value" :icon-size="16" :disabled="options.disabled">
-        <a-radio shape="square" :value="item.value" v-for="(item, key) in radioOptions" :key="item.value">
-          {{ item.label }}
-        </a-radio>
+      <a-radio-group v-else :size="options.size" style="vertical-align: middle" v-model:value="options.value" :disabled="options.disabled">
+        <template v-for="(item, key) in radioOptions" :key="item.value">
+          <a-radio-button style="padding: 0 12px" v-if="options.radioStyleType === 'button'" :value="item.value"> {{ item.label }} </a-radio-button>
+          <a-radio v-else :value="item.value">
+            {{ item.label }}
+          </a-radio>
+        </template>
       </a-radio-group>
     </div>
   </div>
 </template>
 <script lang="ts">
 import optionsConfig from './options-config'
-import { mapActions } from 'pinia'
+import { mapActions, mapState } from 'pinia'
+import { useThemeStore } from '@/stores'
 import { useDataStore } from '@/stores'
 export default {
   type: 'nebula-component-radio',
@@ -39,8 +49,8 @@ export default {
       }
     }
   },
-  mounted() {},
   computed: {
+    ...mapState(useThemeStore, ['themeConfig']),
     flexStyle() {
       if (this.options.labelAlign != 'top') {
         return {

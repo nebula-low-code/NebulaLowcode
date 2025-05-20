@@ -1,9 +1,9 @@
 export default {
   value: '',
   defaultValueType: '', //'Today' 'Monday' 'MonthStart'
-  size: 'default',
+  size: 'middle',
   forbidRange: '', // before、after
-  format: '',
+  format: 'date',
   disabled: false,
   labelShow: true,
   placeholder: '请选择日期',
@@ -28,5 +28,6 @@ export default {
     uuid: '',
     key: '',
     value: ''
-  }
+  },
+  commonConfigAssignIsCol: false
 }

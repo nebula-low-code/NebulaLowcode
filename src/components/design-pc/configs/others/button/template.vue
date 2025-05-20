@@ -5,7 +5,6 @@
     </template>
     {{ options.text }}
   </a-button> -->
-
   <div :style="[buttonStyle, borderRadiusStyle]" style="cursor: pointer" class="button-view">
     <div style="display: flex; align-items: center; width: 100%; justify-content: center" :style="iconStyle">
       <i v-if="options.iconPreShow" style="text-align: center" :style="iconSize" :class="options.customtimageIcon.fontClass" />
@@ -17,6 +16,8 @@
 </template>
 <script lang="ts">
 import optionsConfig from './options-config'
+import { useThemeStore } from '@/stores'
+import { mapState } from 'pinia'
 export default {
   type: 'nebula-component-button',
   components: {},
@@ -26,9 +27,11 @@ export default {
     }
   },
   mounted() {
+    this.initButtonSize(this.options.size)
     this.initButtonType(this.options.type)
   },
   computed: {
+    ...mapState(useThemeStore, ['themeConfig']),
     iconStyle() {
       let fontSize = `font-size: ${this.options.styleEditorConfig.textHtmlSize}px;`
       switch (this.options.iconPosition) {
@@ -64,7 +67,7 @@ export default {
           radius = '50%'
           break
         default:
-          radius = '6px'
+          radius = this.themeConfig.token.borderRadius + 'px'
           break
       }
       return {
@@ -73,11 +76,26 @@ export default {
     }
   },
   methods: {
-    initButtonType(type: any) {
+    initButtonSize(size: string) {
+      if (!this.options.themeChanged.fontSize) {
+        switch (size) {
+          case 'large':
+            this.options.styleEditorConfig.textHtmlSize = Math.round(this.themeConfig.token.fontSize * 1.2)
+            break
+          case 'default':
+            this.options.styleEditorConfig.textHtmlSize = this.themeConfig.token.fontSize
+            break
+          case 'small':
+            this.options.styleEditorConfig.textHtmlSize = Math.round(this.themeConfig.token.fontSize * 0.9)
+            break
+        }
+      }
+    },
+    initButtonType(type: string) {
       switch (type) {
         case 'primary':
           {
-            this.options.backgroundColor = '#1677ff'
+            this.options.backgroundColor = this.themeConfig.token.colorPrimary
             this.options.color = '#fff'
             this.options.commonConfig.borderStyle = {}
           }

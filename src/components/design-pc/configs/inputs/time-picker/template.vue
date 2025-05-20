@@ -5,17 +5,19 @@
       :style="{
         width: options.labelAlign == 'top' ? '100%' : options.width + 'px',
         display: options.labelShow ? '' : 'none',
-        textAlign: options.labelAlign == 'top' ? 'left' : options.labelAlign,
+        textAlign: options.labelAlign == 'top' ? 'left' : options.labelAlign as 'left' | 'center' | 'right',
         lineHeight: options.size == 'large' ? '40px' : options.size == 'small' ? '24px' : '32px'
       }"
     >
       {{ options.label }}
     </label>
     <a-time-picker
+      style="width: 100%"
       :size="options.size"
       :placeholder="options.placeholder"
       :disabled="options.disabled"
       :allowClear="options.clearable"
+      :style="disableStyle"
       :defaultPickerValue="defaultValue"
       :value="value"
       :format="options.format"
@@ -29,6 +31,7 @@ import optionsConfig from './options-config'
 import dayjs from 'dayjs'
 import { mapActions } from 'pinia'
 import { useDataStore } from '@/stores'
+import { getComponentEchoValue } from '@/utils/component-value'
 
 export default {
   name: 'nebula-component-time-picker',
@@ -39,6 +42,14 @@ export default {
     }
   },
   computed: {
+    disableStyle() {
+      if (this.options.disabled) {
+        return {
+          pointerEvents: 'none'
+        }
+      }
+      return {}
+    },
     flexStyle() {
       if (this.options.labelAlign != 'top') {
         return {
@@ -51,16 +62,9 @@ export default {
       return this.options.value.length > 0 ? dayjs(this.options.value, this.options.format) : null
     },
     defaultValue() {
-      if (this.options.interfaceDataEchoConfig.uuid && this.options.interfaceDataEchoConfig.uuid.length > 0) {
-        let interfaceData = this.interfaceDataById(this.options.interfaceDataEchoConfig.uuid)
-        if (interfaceData) {
-          let resp = interfaceData.data.responseData
-          if (resp) {
-            let resValue = resp[this.options.interfaceDataEchoConfig.key]
-            this.options.value = resValue
-            return resValue.length > 0 ? dayjs(resValue, this.options.format) : null
-          }
-        }
+      let val = getComponentEchoValue(this.options, this.options.value)
+      if (val) {
+        return val.length > 0 ? dayjs(val, this.options.format) : null
       }
       return this.options.value.length > 0 ? dayjs(this.options.value, this.options.format) : null
     }

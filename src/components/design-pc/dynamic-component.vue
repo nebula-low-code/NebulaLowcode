@@ -35,6 +35,7 @@ import { componentConfigMap } from '@/components/design-pc/configs'
 import { componentDeepClone } from '@/utils/component-deep-clone-config'
 import { commonstyleConfig } from '@/utils/common-style'
 import { deleteAuthorityService } from '@/api/api'
+import { componentListTreeToStore } from '@/utils/transform-data-list'
 import bus from '@/utils/mitt'
 
 const props = defineProps<{
@@ -46,11 +47,26 @@ const props = defineProps<{
 const store = useDataStore()
 const emit = defineEmits(['saveToBusiness'])
 
+const hasClickAction = computed(() => {
+  let eventList = props.componentConfig.options.eventConfig.eventList
+  let actionList = []
+  for (let i = 0; i < eventList.length; i++) {
+    if (eventList[i].eventType === 'click') {
+      actionList = eventList[i].actionList
+    }
+  }
+  return actionList.length > 1
+})
+
 const generatorRowStyle = computed(() => {
-  return {
+  let style = {
     width: (props.componentConfig.options.commonConfigAssignSpanCol * 100.0) / 24.0 + '%',
     display: props.componentConfig.options.commonConfig.displayHide ? 'none' : 'inline-flex'
   }
+  if (hasClickAction.value) {
+    style.cursor = 'pointer'
+  }
+  return style
 })
 // 容器外样式
 const generatorOutLayoutStyle = computed(() => {
@@ -117,6 +133,9 @@ const generatorOutLayoutStyle = computed(() => {
       }
     }
   }
+  if (hasClickAction.value) {
+    style.cursor = 'pointer'
+  }
   return style
 })
 function isEmpty(value: any) {
@@ -139,7 +158,7 @@ const commonComponentTypes = [
   'van-design-tabs'
 ]
 
-const commonComponentList = computed(() => {
+const insertComponentList = computed(() => {
   let list = []
   for (const type of commonComponentTypes) {
     let comp = componentConfigMap[type]
@@ -150,6 +169,28 @@ const commonComponentList = computed(() => {
         comp.options.commonConfigAssignSign = comp.uuid
         let copyComp = componentDeepClone(comp)
         props.componentList.splice(props.index + 1, 0, copyComp)
+        store.componentListMap[copyComp.uuid] = copyComp
+      }
+    })
+  }
+  return list
+})
+
+const replaceComponentList = computed(() => {
+  let list = []
+  for (const type of commonComponentTypes) {
+    let comp = componentConfigMap[type]
+    list.push({
+      label: comp.name,
+      onClick: () => {
+        let oldComp = componentDeepClone(props.componentList[props.index])
+        props.componentList.splice(props.index, 1)
+
+        let copyComp = componentDeepClone(comp)
+        copyComp.uuid = oldComp.uuid
+        copyComp.options.commonConfigAssignName = oldComp.options.commonConfigAssignName
+        copyComp.options.commonConfigAssignSign = oldComp.options.commonConfigAssignSign
+        props.componentList.splice(props.index, 0, copyComp)
         store.componentListMap[copyComp.uuid] = copyComp
       }
     })
@@ -193,6 +234,18 @@ function onChooseComponentItem(uuid: string) {
 function rightClickMenu(event: MouseEvent) {
   event.preventDefault()
   onChooseComponentItem(props.componentConfig.uuid)
+
+  let eventList = props.componentConfig.options.eventConfig.eventList
+  let list: any = []
+  eventList.forEach((event: any) => {
+    list.push({
+      label: event.eventType === 'click' ? '点击' : event.eventType === 'change' ? '值变化' : event.eventName,
+      onClick: () => {
+        store.openEventDialog(event.eventType, 'component')
+      }
+    })
+  })
+
   ContextMenu.showContextMenu({
     theme: 'default',
     x: event.x,
@@ -212,30 +265,14 @@ function rightClickMenu(event: MouseEvent) {
           let copyItem = componentCopyConfig([...commonly, ...charts, ...inputs, ...others], parseInfo.type, parseInfo.options)
           copyItem.uuid = generateUUID()
           copyItem.options.commonConfigAssignSign = copyItem.uuid
-
           // copyItem.options._data_origin_component_uuid = this.options.commonConfigAssignSign
-          console.log('props.componentConfig=', props.componentConfig)
-
           props.componentList.splice(props.index + 1, 0, copyItem)
-          store.componentListMap[copyItem.uuid] = copyItem
+          componentListTreeToStore(copyItem)
         }
       },
       {
         label: '事件',
-        children: [
-          {
-            label: '点击事件',
-            onClick: () => {
-              store.openEventDialog('click', 'component')
-            }
-          },
-          {
-            label: '值变化事件',
-            onClick: () => {
-              store.openEventDialog('change', 'component')
-            }
-          }
-        ]
+        children: list
       },
       {
         label: '移动',
@@ -271,8 +308,6 @@ function rightClickMenu(event: MouseEvent) {
           {
             label: '向外移动',
             onClick: () => {
-              console.log('parentList===', parentList.value)
-
               if (parentList.value.length === 2) {
                 //由于组件本来可能是在列表中,向外移动时需要清除_data_origin_component_uuid(即数据绑定)
                 props.componentConfig.options._data_origin_component_uuid = ''
@@ -339,6 +374,14 @@ function rightClickMenu(event: MouseEvent) {
         ]
       },
       {
+        label: '插入',
+        children: insertComponentList.value
+      },
+      {
+        label: '替换',
+        children: replaceComponentList.value
+      },
+      {
         label: '父级',
         children: parentMenuList.value
       },
@@ -352,6 +395,12 @@ function rightClickMenu(event: MouseEvent) {
             authorityId: props.componentConfig.uuid,
             reportId: store.pageConfig.config.reportId
           })
+        }
+      },
+      {
+        label: '保存为业务组件',
+        onClick: () => {
+          bus.emit('saveToBusiness', props.componentConfig)
         }
       }
     ]
