@@ -6,6 +6,9 @@
     <a href="https://gitee.com/Nebula-lowcode/nebulalowcode/blob/master/LICENSE"><img src="https://img.shields.io/github/license/mashape/apistatus.svg"></a>
 </p>
 
+## 平台特色
+主打低代码中间件模式，集成嵌入软件产品，连接软件产品的数据库和接口，打通用户、数据和业务，提供低代码开发能力，扩展新功能，解决客户定制化需求，降低软件产品的实施服务成本
+
 ## 平台简介
 星云座是一款致力于解决传统软件开发痛点的低代码平台，通过简化开发流程、降低技术门槛、加快项目交付速度等特点，为用户提供了高效、灵活和成本效益的应用开发解决方案
 
@@ -28,6 +31,7 @@
 - [官网地址](https://www.xingyunzuo.cn?from=gitee)
 - [Demo地址](https://demo.xingyunzuo.com?from=gitee)
 - [Pro demo地址](https://test.xingyunzuo.com?from=gitee)
+- [培训视频](https://www.bilibili.com/video/BV1Y1421B7bp/?spm_id_from=333.337.search-card.all.click&vd_source=88e98143bb8f9f941ea8b11e2c2bd157)
 
 ## 官方群聊
 
@@ -79,23 +83,23 @@ npm run dev
 
 <table>
 	<tr>
-        <td><img src="/.images/p1.png"/></td>
-        <td><img src="/.images/p2.png"/></td>
+        <td><img src=".images/p1.png"/></td>
+        <td><img src=".images/p2.png"/></td>
     </tr>	 
     <tr>
-        <td><img src="/.images/p3.png"/></td>
-        <td><img src="/.images/p4.png"/></td>
+        <td><img src=".images/p3.png"/></td>
+        <td><img src=".images/p4.png"/></td>
     </tr>
     <tr>
-        <td><img src="/.images/b1.png"/></td>
-        <td><img src="/.images/b2.png"/></td>
+        <td><img src=".images/b1.png"/></td>
+        <td><img src=".images/b2.png"/></td>
     </tr>
     <tr>
-        <td><img src="/.images/b3.png"/></td>
-        <td><img src="/.images/b4.png"/></td>
+        <td><img src=".images/b3.png"/></td>
+        <td><img src=".images/b4.png"/></td>
     </tr>
     <tr>
-        <td><img src="/.images/b5.png"/></td>
-        <td><img src="/.images/b6.png"/></td>
+        <td><img src=".images/b5.png"/></td>
+        <td><img src=".images/b6.png"/></td>
     </tr>
 </table>
